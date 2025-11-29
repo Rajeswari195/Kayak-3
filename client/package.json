@@ -1,0 +1,21 @@
+{
+  "name": "client",
+  "version": "0.1.0",
+  "private": true,
+  "description": "React SPA for travelers and admins in the Kayak-like distributed travel metasearch platform.",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "echo \"Client linting will be configured in a later step (ESLint/Prettier).\"",
+    "test": "echo \"Client tests (e.g., Jest/React Testing Library) will be added in later steps.\""
+  },
+  "dependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  },
+  "devDependencies": {
+    "vite": "^5.0.0",
+    "@vitejs/plugin-react-swc": "^3.5.0"
+  }
+}

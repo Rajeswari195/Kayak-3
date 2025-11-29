@@ -1,0 +1,23 @@
+{
+  "name": "@kayak/core-api",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Node.js + Express core API for the Kayak-like travel metasearch and booking platform.",
+  "main": "src/index.js",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon src/index.js",
+    "start": "node src/index.js",
+    "lint": "echo \"Core API linting will be configured in a later step (ESLint/Prettier).\"",
+    "test": "echo \"Core API tests (unit/integration) will be added in later steps.\""
+  },
+  "dependencies": {
+    "express": "^4.18.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.0"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

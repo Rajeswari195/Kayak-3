@@ -1,0 +1,14 @@
+{
+  "name": "@kayak/ai-service",
+  "version": "0.1.0",
+  "private": true,
+  "description": "FastAPI-based multi-agent deals and concierge AI service for the Kayak-like travel platform.",
+  "scripts": {
+    "dev": "uvicorn app.main:app --reload --host 0.0.0.0 --port 8001",
+    "start": "uvicorn app.main:app --host 0.0.0.0 --port 8001",
+    "test": "echo \"AI service tests (pytest) will be added in later steps.\""
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
