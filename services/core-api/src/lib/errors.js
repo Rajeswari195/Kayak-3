@@ -1,61 +1,83 @@
 /**
  * @file errors.js
  * @description
- * Central error types and error code constants for the core-api service.
+ * Centralized error code constants and domain error classes for the core-api.
  *
  * Responsibilities:
- * - Provide a base DomainError class that other domain-specific errors extend.
- * - Define a canonical set of error codes used across controllers/services.
- * - Offer simple helper predicates for error handling middleware.
+ * - Define a canonical set of error code strings used in JSON responses.
+ * - Provide base `DomainError` and more specific subclasses for common cases.
+ * - Offer a type guard (`isDomainError`) to distinguish domain errors from
+ *   unexpected/unhandled errors.
  *
- * Notes:
- * - These error types are intentionally lightweight and dependency-free.
- * - Controllers and services should throw DomainError (or subclasses) rather
- *   than manually constructing HTTP responses.
+ * Key error codes (not exhaustive):
+ * - invalid_user_id: SSN-style userId failed validation.
+ * - malformed_state: State value is not a valid US state name/abbreviation.
+ * - malformed_zip: ZIP code is not in ##### or #####-#### format.
+ * - duplicate_user: SSN or email already exists.
+ * - invalid_credentials: Login failed due to wrong email/password.
+ * - account_suspended: User account is disabled.
+ * - has_active_bookings: User cannot be deleted due to active bookings.
+ * - immutable_field: Attempt to change an immutable field such as userId.
+ *
+ * @notes
+ * - The actual HTTP status code is chosen by the error class/constructor, not
+ *   by the error code string itself.
+ * - New error codes should be added here so they remain discoverable and
+ *   consistent across services and controllers.
  */
 
-/**
- * Canonical error codes for the API.
- *
- * These codes should be surfaced to clients as-is, so they can build
- * UI and behavior around them (e.g., "invalid_user_id", "malformed_state").
- */
 export const ERROR_CODES = {
+  // User-specific validation/domain codes
   INVALID_USER_ID: "invalid_user_id",
   MALFORMED_STATE: "malformed_state",
   MALFORMED_ZIP: "malformed_zip",
   DUPLICATE_USER: "duplicate_user",
+  HAS_ACTIVE_BOOKINGS: "has_active_bookings",
+  IMMUTABLE_FIELD: "immutable_field",
 
+  // Auth-related codes
   INVALID_CREDENTIALS: "invalid_credentials",
   ACCOUNT_SUSPENDED: "account_suspended",
+  TOKEN_MISSING: "token_missing",
   TOKEN_INVALID: "token_invalid",
   TOKEN_EXPIRED: "token_expired",
 
+  // Generic authorization/resource codes
   UNAUTHORIZED: "unauthorized",
   FORBIDDEN: "forbidden",
   NOT_FOUND: "not_found",
 
+  // Validation / conflict
   VALIDATION_ERROR: "validation_error",
   CONFLICT: "conflict",
 
+  // Booking/payment
   NO_INVENTORY: "no_inventory",
   PAYMENT_FAILED: "payment_failed",
 
+  // Catch-all internal error
   INTERNAL_ERROR: "internal_error"
 };
 
 /**
- * Base class for all domain-level errors in the core-api.
- *
+ * @class DomainError
  * @extends Error
+ * @description
+ * Base class for all domain-level errors that should be translated into
+ * structured JSON responses by the error middleware.
+ *
+ * @property {string} code - Application-level error code (see ERROR_CODES).
+ * @property {number} statusCode - HTTP status code to use in responses.
+ * @property {any} [details] - Optional domain-specific payload for debugging
+ *   or client-side context (e.g., which field failed).
  */
 export class DomainError extends Error {
   /**
    * @param {string} message - Human-readable error message.
    * @param {Object} [options]
-   * @param {string} [options.code] - Machine-readable error code (see ERROR_CODES).
-   * @param {number} [options.statusCode=400] - HTTP status code to use.
-   * @param {any} [options.details] - Optional structured details for debugging/UX.
+   * @param {string} [options.code] - Error code from ERROR_CODES.
+   * @param {number} [options.statusCode=400] - HTTP status code.
+   * @param {any} [options.details] - Optional structured details.
    */
   constructor(message, { code, statusCode = 400, details } = {}) {
     super(message || "Domain error");
@@ -71,11 +93,15 @@ export class DomainError extends Error {
 }
 
 /**
- * Error representing validation failures (e.g., bad payload, SSN/state/ZIP).
+ * @class ValidationError
+ * @extends DomainError
+ * @description
+ * Convenience subclass for generic validation failures where a more specific
+ * error code is not provided.
  */
 export class ValidationError extends DomainError {
   /**
-   * @param {string} message
+   * @param {string} [message]
    * @param {any} [details]
    */
   constructor(message, details) {
@@ -88,11 +114,14 @@ export class ValidationError extends DomainError {
 }
 
 /**
- * Error representing a missing resource (e.g., booking not found).
+ * @class NotFoundError
+ * @extends DomainError
+ * @description
+ * Standard error for missing resources (404).
  */
 export class NotFoundError extends DomainError {
   /**
-   * @param {string} message
+   * @param {string} [message]
    * @param {any} [details]
    */
   constructor(message, details) {
@@ -105,11 +134,14 @@ export class NotFoundError extends DomainError {
 }
 
 /**
- * Error representing an authentication failure (no/invalid credentials).
+ * @class UnauthorizedError
+ * @extends DomainError
+ * @description
+ * Error representing unauthenticated access attempts (401).
  */
 export class UnauthorizedError extends DomainError {
   /**
-   * @param {string} message
+   * @param {string} [message]
    * @param {any} [details]
    */
   constructor(message, details) {
@@ -122,11 +154,14 @@ export class UnauthorizedError extends DomainError {
 }
 
 /**
- * Error representing a permission issue (user lacks required role).
+ * @class ForbiddenError
+ * @extends DomainError
+ * @description
+ * Error representing authenticated users lacking permission for an action (403).
  */
 export class ForbiddenError extends DomainError {
   /**
-   * @param {string} message
+   * @param {string} [message]
    * @param {any} [details]
    */
   constructor(message, details) {
@@ -139,13 +174,16 @@ export class ForbiddenError extends DomainError {
 }
 
 /**
- * Error representing a conflict (e.g., duplicate_user).
+ * @class ConflictError
+ * @extends DomainError
+ * @description
+ * Error representing conflicts such as duplicate keys or invalid state (409).
  */
 export class ConflictError extends DomainError {
   /**
-   * @param {string} message
-   * @param {string} [code]
-   * @param {any} [details]
+   * @param {string} [message] - Human-readable message.
+   * @param {string} [code] - Specific conflict code (defaults to ERROR_CODES.CONFLICT).
+   * @param {any} [details] - Optional details payload.
    */
   constructor(message, code = ERROR_CODES.CONFLICT, details) {
     super(message || "Conflict", {
@@ -157,7 +195,7 @@ export class ConflictError extends DomainError {
 }
 
 /**
- * Cheap type guard for DomainError instances.
+ * Type guard to identify domain errors.
  *
  * @param {unknown} err
  * @returns {err is DomainError}

@@ -22,6 +22,7 @@ import { loadConfig } from "./config/config.js";
 import { loggingMiddleware } from "./middlewares/logging-middleware.js";
 import { notFoundMiddleware } from "./middlewares/not-found-middleware.js";
 import { errorMiddleware } from "./middlewares/error-middleware.js";
+import apiRouter from "./routes/index.js";
 
 // ---------------------------------------------------------------------------
 // Load configuration
@@ -101,6 +102,9 @@ app.get("/health", (req, res) => {
     timestamp: new Date().toISOString()
   });
 });
+
+// Mount versioned API routes under /api
+app.use("/api", apiRouter);
 
 // TODO (future steps):
 // app.use("/api", apiRouter); // where apiRouter aggregates domain routes
