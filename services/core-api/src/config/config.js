@@ -1,3 +1,14 @@
+// src/config/config.js
+import path from 'node:path';
+import dotenv from 'dotenv';
+
+// 1. Try .env.local first
+dotenv.config({
+  path: path.resolve(process.cwd(), '.env.local'),
+});
+
+// 2. Then fall back to .env (optional)
+dotenv.config();
 /**
  * @file config.js
  * @description
