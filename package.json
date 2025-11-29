@@ -1,0 +1,44 @@
+{
+  "name": "kayak-ai-travel-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Kayak-like distributed travel metasearch & agentic AI recommendation platform implemented as a JavaScript/Python monorepo with React, Node/Express, FastAPI, MySQL, MongoDB, Redis, and Kafka.",
+  "keywords": [
+    "travel",
+    "metasearch",
+    "booking",
+    "react",
+    "express",
+    "fastapi",
+    "mysql",
+    "mongodb",
+    "redis",
+    "kafka",
+    "distributed-systems",
+    "monorepo"
+  ],
+  "license": "MIT",
+  "author": "",
+  "type": "module",
+  "engines": {
+    "node": ">=20.0.0",
+    "npm": ">=9.0.0"
+  },
+  "workspaces": [
+    "client",
+    "services/core-api",
+    "services/ai-service",
+    "db",
+    "infra",
+    "lib",
+    "types",
+    "prompts",
+    "services/workers/*"
+  ],
+  "scripts": {
+    "bootstrap:note": "node -e \"console.log('Root workspaces are configured. Install and run scripts inside each workspace (client, services/core-api, services/ai-service, etc.) as you implement them.')\"",
+    "postinstall": "npm run bootstrap:note",
+    "lint": "echo \"No root lint step yet. Run linting inside individual workspaces.\"",
+    "test": "echo \"No root test step yet. Run tests from each workspace (client, services/core-api, services/ai-service, etc.).\""
+  }
+}

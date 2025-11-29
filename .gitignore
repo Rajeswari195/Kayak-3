@@ -1,0 +1,99 @@
+# -----------------------------------------------------------------------------
+# Root .gitignore for Kayak-Like Distributed Travel Metasearch & AI Platform
+# -----------------------------------------------------------------------------
+# This file is shared across all workspaces in the monorepo (client, services,
+# db, infra, lib, types, prompts, etc.). It is intentionally broad to prevent
+# accidental commits of build artifacts, local tooling files, and secrets.
+# -----------------------------------------------------------------------------
+
+# Node.js dependencies
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# Build & dist outputs
+dist/
+build/
+out/
+coverage/
+.nyc_output/
+.cache/
+.tmp/
+.temp/
+.eslintcache
+.cache-loader/
+
+# Frontend specific
+client/.vite/
+client/.next/
+client/.nuxt/
+client/.cache/
+client/public/build/
+
+# Python virtual environments & caches
+venv/
+.env/
+.venv/
+env/
+*.pyc
+__pycache__/
+.mypy_cache/
+.pytest_cache/
+
+# Environment files (do not commit secrets)
+*.env
+*.env.local
+*.env.development
+*.env.production
+*.env.test
+
+# Logs
+*.log
+logs/
+log/
+debug.log
+
+# OS / editor files
+.DS_Store
+Thumbs.db
+Icon?
+ehthumbs.db
+Desktop.ini
+
+# IDE / editor settings
+.vscode/
+.idea/
+*.swp
+*.swo
+*.swn
+*.swm
+
+# Docker & Kubernetes local artifacts
+docker-compose.override.yml
+*.tar
+*.img
+
+# Database & runtime data
+data/
+tmp/
+*.sqlite
+*.sqlite3
+
+# Test artifacts
+reports/
+junit.xml
+cypress/videos/
+cypress/screenshots/
+
+# Misc
+*.iml
+*.orig
+*.rej
+
+# Local documentation exports (images, generated PDFs, etc.)
+docs/generated/

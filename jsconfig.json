@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "*"
+      ]
+    },
+    "checkJs": false
+  },
+  "include": [
+    "client/src",
+    "services/**/*",
+    "db/**/*",
+    "infra/**/*",
+    "lib/**/*",
+    "types/**/*",
+    "prompts/**/*",
+    "scripts/**/*"
+  ],
+  "_comment": "This jsconfig enables path aliasing using the @/* convention from the monorepo root and helps editors provide better IntelliSense across workspaces."
+}

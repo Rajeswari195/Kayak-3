@@ -1,0 +1,19 @@
+{
+  "description": "Declarative description of monorepo workspaces for the Kayak-like travel platform. This file is primarily documentation to complement npm workspaces declared in the root package.json.",
+  "packages": [
+    "client",
+    "services/core-api",
+    "services/ai-service",
+    "db",
+    "infra",
+    "lib",
+    "types",
+    "prompts",
+    "services/workers/*"
+  ],
+  "_notes": [
+    "The authoritative workspace configuration for npm is defined in the root package.json under the `workspaces` field.",
+    "This file exists to make the workspace layout explicit and easy to inspect for tools or contributors that do not parse package.json.",
+    "Each listed package directory will eventually have its own package.json (for JS/Node) or equivalent configuration (for Python-based services like ai-service)."
+  ]
+}
