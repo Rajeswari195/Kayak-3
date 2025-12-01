@@ -20,7 +20,7 @@
  *   `role-middleware.js` exposes `requireAdmin`, as established in Step 10.
  */
 
-BEGIN WRITING FILE CODE
+
 
 import { Router } from "express";
 import { requireAuth } from "../middlewares/auth-middleware.js";

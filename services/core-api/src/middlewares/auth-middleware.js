@@ -108,3 +108,74 @@ export function requireAuth(req, res, next) {
     });
   }
 }
+
+/**
+ * Optional authentication middleware.
+ * Attaches user if valid JWT is present, but continues even if no token provided.
+ * Useful for endpoints that work for both authenticated and anonymous users.
+ *
+ * On success with token:
+ *   - Attaches `req.user` with fields { id, role, email?, firstName?, lastName? }
+ *   - Calls `next()`
+ *
+ * On missing or invalid token:
+ *   - Sets `req.user = null`
+ *   - Calls `next()` (continues processing)
+ *
+ * @param {import("express").Request & { user?: AuthenticatedUser | null }} req
+ * @param {import("express").Response} res
+ * @param {import("express").NextFunction} next
+ */
+export function optionalAuth(req, res, next) {
+  const authHeader =
+    req.headers.authorization || /** @type {string | undefined} */ (
+      req.headers.Authorization
+    );
+
+  // No auth header provided - continue as anonymous
+  if (!authHeader || typeof authHeader !== "string") {
+    req.user = null;
+    return next();
+  }
+
+  const [scheme, token] = authHeader.split(" ");
+
+  // Invalid auth header format - continue as anonymous
+  if (!scheme || scheme.toLowerCase() !== "bearer" || !token) {
+    req.user = null;
+    return next();
+  }
+
+  try {
+    const decoded = verifyAccessToken(token);
+
+    if (!decoded || typeof decoded !== "object" || !decoded.sub) {
+      // Invalid token - continue as anonymous
+      req.user = null;
+      return next();
+    }
+
+    /** @type {AuthenticatedUser} */
+    const user = {
+      id: String(decoded.sub),
+      role:
+        decoded.role === "ADMIN" || decoded.role === "USER"
+          ? /** @type {("USER"|"ADMIN")} */ (decoded.role)
+          : "USER",
+      email: decoded.email ? String(decoded.email) : undefined,
+      firstName: decoded.firstName ? String(decoded.firstName) : undefined,
+      lastName: decoded.lastName ? String(decoded.lastName) : undefined
+    };
+
+    // Attach user to request
+    // eslint-disable-next-line no-param-reassign
+    req.user = user;
+
+    return next();
+  } catch (err) {
+    // Any token error - continue as anonymous
+    req.user = null;
+    return next();
+  }
+}
+

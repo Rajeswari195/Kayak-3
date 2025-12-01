@@ -33,7 +33,7 @@ dotenv.config();
  * @see services/core-api/.env.example for environment variable descriptions.
  */
 
-// BEGIN WRITING FILE CODE
+
 
 /**
  * @typedef {Object} MysqlPoolConfig
@@ -74,7 +74,7 @@ function readEnvString(name, options = {}) {
   if ((value === undefined || value === null || value === "") && required) {
     throw new Error(
       `[config] Missing required environment variable "${name}". ` +
-        `Please define it in services/core-api/.env.local (or your deployment environment).`
+      `Please define it in services/core-api/.env.local (or your deployment environment).`
     );
   }
 
@@ -109,7 +109,7 @@ function readEnvInt(name, options = {}) {
     if (required) {
       throw new Error(
         `[config] Environment variable "${name}" must be a valid integer, ` +
-          `but got "${raw}".`
+        `but got "${raw}".`
       );
     }
     return defaultValue;
@@ -136,7 +136,7 @@ function readEnvList(name, options = {}) {
     if (required) {
       throw new Error(
         `[config] Missing required environment variable "${name}". ` +
-          `Expected a comma-separated list (e.g., "localhost:9092").`
+        `Expected a comma-separated list (e.g., "localhost:9092").`
       );
     }
     return defaultValue;
@@ -150,7 +150,7 @@ function readEnvList(name, options = {}) {
   if (required && parts.length === 0) {
     throw new Error(
       `[config] Environment variable "${name}" was set but parsed to an empty list. ` +
-        `Please provide at least one value.`
+      `Please provide at least one value.`
     );
   }
 
@@ -227,7 +227,7 @@ export function loadConfig(options = {}) {
   if (mysqlPoolMin <= 0 || mysqlPoolMax <= 0 || mysqlPoolMax < mysqlPoolMin) {
     throw new Error(
       "[config] Invalid MySQL pool configuration. Ensure MYSQL_POOL_MIN and " +
-        "MYSQL_POOL_MAX are positive integers and MAX >= MIN."
+      "MYSQL_POOL_MAX are positive integers and MAX >= MIN."
     );
   }
 
@@ -277,7 +277,7 @@ export function getConfig() {
   if (!cachedConfig) {
     throw new Error(
       "[config] Configuration has not been loaded yet. " +
-        "Call loadConfig() during application startup."
+      "Call loadConfig() during application startup."
     );
   }
   return cachedConfig;

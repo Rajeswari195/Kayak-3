@@ -27,7 +27,7 @@
  *   the factory and binding it to the appropriate connection.
  */
 
-BEGIN WRITING FILE CODE
+// BEGIN WRITING FILE CODE
 
 import mongoose from "mongoose";
 
