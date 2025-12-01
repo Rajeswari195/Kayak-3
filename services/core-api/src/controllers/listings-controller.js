@@ -21,7 +21,7 @@
  *   fare rules) can be layered on top of these controllers in future steps.
  */
 
-BEGIN WRITING FILE CODE
+
 
 import { mysqlQuery } from "../db/mysql.js";
 import {
@@ -211,7 +211,7 @@ export async function searchFlights(req, res, next) {
     if (!departureDate) {
       errors.push(
         departureError ||
-          'Query parameter "departureDate" is required and must be YYYY-MM-DD.'
+        'Query parameter "departureDate" is required and must be YYYY-MM-DD.'
       );
     }
 
@@ -545,8 +545,8 @@ export async function searchHotels(req, res, next) {
         sortBy === "stars"
           ? "stars"
           : sortBy === "rating"
-          ? "rating"
-          : "price",
+            ? "rating"
+            : "price",
       sortOrder,
     };
 

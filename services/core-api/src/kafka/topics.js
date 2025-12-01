@@ -30,4 +30,7 @@ export const KAFKA_TOPICS = Object.freeze({
   USER_ACTIVITY,
 });
 
+// Export as TOPICS for compatibility with various imports
+export const TOPICS = KAFKA_TOPICS;
+
 export default KAFKA_TOPICS;

@@ -23,6 +23,10 @@ import { loggingMiddleware } from "./middlewares/logging-middleware.js";
 import { notFoundMiddleware } from "./middlewares/not-found-middleware.js";
 import { errorMiddleware } from "./middlewares/error-middleware.js";
 import apiRouter from "./routes/index.js";
+import routes from "./routes/index.js";
+
+app.use("/api", routes);
+
 
 // ---------------------------------------------------------------------------
 // Load configuration

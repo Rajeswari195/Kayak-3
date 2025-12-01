@@ -23,7 +23,7 @@
  *   logging and Kafka emissions can be layered later.
  */
 
-BEGIN WRITING FILE CODE
+
 
 import { randomUUID } from "node:crypto";
 import { mysqlQuery } from "../db/mysql.js";

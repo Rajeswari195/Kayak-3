@@ -17,7 +17,7 @@
  *   a prefix such as `/api`.
  */
 
-BEGIN WRITING FILE CODE
+
 
 import { Router } from "express";
 import {
