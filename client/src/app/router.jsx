@@ -21,8 +21,11 @@ import AdminRoute from './admin-route';
 import LoginPage from './auth/login-page';
 import RegisterPage from './auth/register-page';
 
-// User Pages (Step 44)
+// User Pages
 import ProfilePage from './profile/profile-page';
+
+// Search Page (Step 45)
+import SearchPage from './search/search-page';
 
 // Placeholder components for routes not yet implemented
 const Placeholder = ({ title }) => (
@@ -46,17 +49,13 @@ export default function AppRouter() {
         <Route path="/" element={<Navigate to="/search" replace />} />
         
         {/* Publicly accessible features */}
-        <Route path="/search" element={<Placeholder title="Search Listings" />} />
+        {/* Updated to use actual SearchPage */}
+        <Route path="/search" element={<SearchPage />} />
+        
         <Route path="/concierge" element={<Placeholder title="AI Concierge" />} />
 
         {/* Protected User Routes */}
         <Route element={<ProtectedRoute />}>
-          {/* Note: /bookings could be a standalone page, but for now we link it to Profile or a dedicated bookings page. 
-              The spec asked for "View bookings" separately but Profile aggregates them well. 
-              Let's keep /bookings as a route, maybe redirecting to profile or having its own view. 
-              For now, we will use ProfilePage for /bookings too or just a placeholder if it's distinct.
-              Spec: "View bookings... Past/Current/Future". ProfilePage has this.
-              Let's map /bookings to ProfilePage for now or a dedicated wrapper. */}
           <Route path="/bookings" element={<ProfilePage />} />
           <Route path="/profile" element={<ProfilePage />} />
         </Route>
