@@ -17,6 +17,13 @@ import AdminLayout from './layouts/admin-layout';
 import ProtectedRoute from './protected-route';
 import AdminRoute from './admin-route';
 
+// Auth Pages
+import LoginPage from './auth/login-page';
+import RegisterPage from './auth/register-page';
+
+// User Pages (Step 44)
+import ProfilePage from './profile/profile-page';
+
 // Placeholder components for routes not yet implemented
 const Placeholder = ({ title }) => (
   <div className="p-10 text-center animate-in fade-in zoom-in duration-300">
@@ -25,24 +32,13 @@ const Placeholder = ({ title }) => (
   </div>
 );
 
-// We will implement actual pages in the next steps (43, 44, etc.)
-// For now, these placeholders verify routing logic works.
-import LoginPage from './auth/login-page'; // Anticipating Step 43 creation
-import RegisterPage from './auth/register-page'; // Anticipating Step 43 creation
-
-// Fallback plain components if the files don't exist yet in this atomic step context
-// (Though typically I would create them in the next step, I'll use placeholders here 
-// if the imports fail, but since I am writing the router now, I'll stick to placeholders 
-// for the pages I haven't built yet to avoid runtime crash).
-
 export default function AppRouter() {
   return (
     <Routes>
       {/* Auth Routes */}
       <Route path="/auth">
-        {/* We will build these actual components in Step 43. Using Placeholders for now. */}
-        <Route path="login" element={<Placeholder title="Login Page" />} />
-        <Route path="register" element={<Placeholder title="Register Page" />} />
+        <Route path="login" element={<LoginPage />} />
+        <Route path="register" element={<RegisterPage />} />
       </Route>
 
       {/* Main App Routes */}
@@ -55,8 +51,14 @@ export default function AppRouter() {
 
         {/* Protected User Routes */}
         <Route element={<ProtectedRoute />}>
-          <Route path="/bookings" element={<Placeholder title="My Bookings" />} />
-          <Route path="/profile" element={<Placeholder title="User Profile" />} />
+          {/* Note: /bookings could be a standalone page, but for now we link it to Profile or a dedicated bookings page. 
+              The spec asked for "View bookings" separately but Profile aggregates them well. 
+              Let's keep /bookings as a route, maybe redirecting to profile or having its own view. 
+              For now, we will use ProfilePage for /bookings too or just a placeholder if it's distinct.
+              Spec: "View bookings... Past/Current/Future". ProfilePage has this.
+              Let's map /bookings to ProfilePage for now or a dedicated wrapper. */}
+          <Route path="/bookings" element={<ProfilePage />} />
+          <Route path="/profile" element={<ProfilePage />} />
         </Route>
       </Route>
 
