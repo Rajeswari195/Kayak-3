@@ -15,7 +15,6 @@
  * - Records contextual information like IP address and user agent.
  */
 
-BEGIN WRITING FILE CODE
 
 import mongoose from "mongoose";
 

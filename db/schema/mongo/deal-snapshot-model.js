@@ -19,7 +19,6 @@
  * - Includes flexible rawPayload field for original event content.
  */
 
-BEGIN WRITING FILE CODE
 
 import mongoose from "mongoose";
 

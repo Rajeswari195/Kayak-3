@@ -15,7 +15,7 @@
  * - Emit booking.events to Kafka.
  */
 
-import { runInTransaction } from "./transaction-helper.js";
+import { runInBookingTransaction } from "./transaction-helper.js";
 import * as hotelsRepository from "../../repositories/mysql/hotels-repository.js";
 import * as bookingsRepository from "../../repositories/mysql/bookings-repository.js";
 import * as billingRepository from "../../repositories/mysql/billing-repository.js";
@@ -134,7 +134,7 @@ export async function createHotelBookingService(userId, payload) {
   let txResult = null;
 
   try {
-    txResult = await runInTransaction(async (connection) => {
+    txResult = await runInBookingTransaction("createHotelBooking", async (connection) => {
       // 1) Lock hotel room inventory
       const room =
         await hotelsRepository.findHotelRoomByHotelAndTypeForUpdate(

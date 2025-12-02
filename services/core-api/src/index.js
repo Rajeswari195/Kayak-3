@@ -22,10 +22,9 @@ import { loadConfig } from "./config/config.js";
 import { loggingMiddleware } from "./middlewares/logging-middleware.js";
 import { notFoundMiddleware } from "./middlewares/not-found-middleware.js";
 import { errorMiddleware } from "./middlewares/error-middleware.js";
+import analyticsRoutes from "./routes/analytics-routes.js";
 import apiRouter from "./routes/index.js";
-import routes from "./routes/index.js";
 
-app.use("/api", routes);
 
 
 // ---------------------------------------------------------------------------
@@ -107,8 +106,11 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.use("/api/admin/analytics", analyticsRoutes);
+
 // Mount versioned API routes under /api
 app.use("/api", apiRouter);
+
 
 // TODO (future steps):
 // app.use("/api", apiRouter); // where apiRouter aggregates domain routes

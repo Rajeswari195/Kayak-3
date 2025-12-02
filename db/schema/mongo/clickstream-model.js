@@ -17,8 +17,6 @@
  * - Designed to work with Kafka-driven analytics workers and admin dashboards.
  */
 
-BEGIN WRITING FILE CODE
-
 import mongoose from "mongoose";
 
 const { Schema } = mongoose;

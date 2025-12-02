@@ -8,7 +8,28 @@ dotenv.config({
 });
 
 // 2. Then fall back to .env (optional)
-dotenv.config();
+import fs from 'node:fs';
+const envPath = path.resolve(process.cwd(), '.env');
+console.log("[config] Loading .env from:", envPath);
+if (fs.existsSync(envPath)) {
+  console.log("[config] .env content:", fs.readFileSync(envPath, 'utf-8'));
+} else {
+  console.log("[config] .env does not exist");
+}
+const result = dotenv.config({ path: envPath });
+console.log("[config] dotenv result:", result);
+if (result.error) {
+  console.error("[config] dotenv error:", result.error);
+}
+if (result.parsed) {
+  console.log("[config] Manually assigning env vars from dotenv parsed result");
+  for (const k in result.parsed) {
+    process.env[k] = result.parsed[k];
+  }
+}
+console.log("[config] MYSQL_URL after assignment:", process.env.MYSQL_URL);
+
+
 /**
  * @file config.js
  * @description

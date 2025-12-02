@@ -16,7 +16,7 @@
  * - On failure, rollback transaction and emit BOOKING_FAILED event.
  */
 
-import { runInTransaction } from "./transaction-helper.js";
+import { runInBookingTransaction } from "./transaction-helper.js";
 import * as flightsRepository from "../../repositories/mysql/flights-repository.js";
 import * as bookingsRepository from "../../repositories/mysql/bookings-repository.js";
 import * as billingRepository from "../../repositories/mysql/billing-repository.js";
@@ -151,7 +151,7 @@ export async function createFlightBookingService(userId, payload) {
   let txResult = null;
 
   try {
-    txResult = await runInTransaction(async (connection) => {
+    txResult = await runInBookingTransaction("createFlightBooking", async (connection) => {
       // 1) Lock and load flight
       const flight = await flightsRepository.findFlightByIdForUpdate(
         connection,

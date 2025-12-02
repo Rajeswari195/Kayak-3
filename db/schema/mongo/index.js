@@ -19,8 +19,6 @@
  *   in-memory or temporary databases.
  */
 
-BEGIN WRITING FILE CODE
-
 import {
   REVIEW_COLLECTION_NAME,
   createReviewModel,

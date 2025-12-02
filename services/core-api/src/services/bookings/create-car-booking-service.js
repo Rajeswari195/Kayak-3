@@ -15,7 +15,7 @@
  * - Emit booking.events to Kafka.
  */
 
-import { runInTransaction } from "./transaction-helper.js";
+import { runInBookingTransaction } from "./transaction-helper.js";
 import * as carsRepository from "../../repositories/mysql/cars-repository.js";
 import * as bookingsRepository from "../../repositories/mysql/bookings-repository.js";
 import * as billingRepository from "../../repositories/mysql/billing-repository.js";
@@ -117,14 +117,14 @@ export async function createCarBookingService(userId, payload) {
       1,
       Math.round(
         (dropoff.getTime() - pickup.getTime()) /
-          (1000 * 60 * 60 * 24)
+        (1000 * 60 * 60 * 24)
       )
     );
 
   let txResult = null;
 
   try {
-    txResult = await runInTransaction(async (connection) => {
+    txResult = await runInBookingTransaction("createCarBooking", async (connection) => {
       // 1) Load car listing (and ensure active)
       const car = await carsRepository.findCarByIdForUpdate(
         connection,
