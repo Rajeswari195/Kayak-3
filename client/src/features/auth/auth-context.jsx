@@ -11,18 +11,18 @@
  */
 
 import React, { createContext, useReducer, useEffect, useCallback, useMemo } from 'react';
-import { 
-  loginWithEmailAndPassword, 
-  registerUser, 
-  logoutUser, 
-  getProfile 
+import {
+  loginWithEmailAndPassword,
+  registerUser,
+  logoutUser,
+  getProfile
 } from './api';
-import { 
-  getToken, 
-  setToken, 
-  clearAuth, 
-  getStoredUser, 
-  setStoredUser 
+import {
+  getToken,
+  setToken,
+  clearAuth,
+  getStoredUser,
+  setStoredUser
 } from '@/lib/auth-storage';
 
 // Initial State
@@ -90,9 +90,9 @@ export function AuthProvider({ children }) {
 
       if (token && storedUser) {
         // Optimistically set user from storage
-        dispatch({ 
-          type: ACTIONS.INITIALIZE, 
-          payload: { user: storedUser } 
+        dispatch({
+          type: ACTIONS.INITIALIZE,
+          payload: { user: storedUser }
         });
 
         // Optionally verify with backend in background to ensure token is still valid
@@ -108,9 +108,9 @@ export function AuthProvider({ children }) {
           dispatch({ type: ACTIONS.LOGOUT });
         }
       } else {
-        dispatch({ 
-          type: ACTIONS.INITIALIZE, 
-          payload: { user: null } 
+        dispatch({
+          type: ACTIONS.INITIALIZE,
+          payload: { user: null }
         });
       }
     }
@@ -123,13 +123,13 @@ export function AuthProvider({ children }) {
     try {
       const response = await loginWithEmailAndPassword(credentials);
       const { accessToken, user } = response;
-      
+
       setToken(accessToken);
       setStoredUser(user);
-      
-      dispatch({ 
-        type: ACTIONS.LOGIN_SUCCESS, 
-        payload: { user } 
+
+      dispatch({
+        type: ACTIONS.LOGIN_SUCCESS,
+        payload: { user }
       });
       return { success: true };
     } catch (error) {
@@ -142,28 +142,33 @@ export function AuthProvider({ children }) {
   const register = useCallback(async (payload) => {
     dispatch({ type: ACTIONS.CLEAR_ERROR });
     try {
-      // Register usually returns the created user. 
-      // Depending on backend, it might also return a token or require login afterwards.
-      // Based on spec "POST /api/users ... returns { user: ... }", we assume auto-login might not be default
-      // UNLESS /api/users explicitly sets a cookie or returns a token.
-      // However, usually flows are: Register -> Auto Login OR Register -> Redirect to Login.
-      // Let's assume we need to login separately or the backend returns token (common in modern flows).
-      
-      // If the backend `createUserController` returns { user }, we usually need to login next.
-      // But for better UX, let's assume we might need to prompt user to login.
-      
       const response = await registerUser(payload);
-      
-      // If backend returns token immediately (often convenient):
-      if (response.accessToken) {
+
+      // Auto-login after successful registration
+      if (payload.email && payload.password) {
+        const loginResponse = await loginWithEmailAndPassword({
+          email: payload.email,
+          password: payload.password
+        });
+
+        const { accessToken, user } = loginResponse;
+        setToken(accessToken);
+        setStoredUser(user);
+
+        dispatch({
+          type: ACTIONS.LOGIN_SUCCESS,
+          payload: { user }
+        });
+      } else if (response.accessToken) {
+        // Fallback if backend returns token directly
         setToken(response.accessToken);
         setStoredUser(response.user);
-        dispatch({ 
-          type: ACTIONS.LOGIN_SUCCESS, 
-          payload: { user: response.user } 
+        dispatch({
+          type: ACTIONS.LOGIN_SUCCESS,
+          payload: { user: response.user }
         });
       }
-      
+
       return response;
     } catch (error) {
       const message = error.message || 'Registration failed';

@@ -49,8 +49,8 @@ export default function UserReviewsList() {
     async function fetch() {
       setIsLoading(true);
       try {
-        const data = await getUserReviews();
-        setReviews(data || []);
+        // const data = await getUserReviews();
+        // setReviews(data || []);
       } catch (err) {
         // Backend might 404 if no reviews endpoint yet, handle gracefully
         console.warn("Reviews fetch failed", err);

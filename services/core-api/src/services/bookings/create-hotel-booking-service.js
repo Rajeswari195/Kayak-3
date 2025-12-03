@@ -2,19 +2,9 @@
  * @file create-hotel-booking-service.js
  * @description
  * Service for creating hotel bookings with transactional booking + billing.
- *
- * Flow:
- * - Validate payload (hotelId, roomType, check-in/out, payment token).
- * - In a MySQL transaction:
- *    - Lock hotel room row and verify rooms_available.
- *    - Create booking header and hotel booking item.
- *    - Decrement rooms_available.
- *    - Call payment simulator.
- *    - Insert billing transaction row.
- *    - Update booking status.
- * - Emit booking.events to Kafka.
  */
 
+import { randomUUID } from "node:crypto";
 import { runInBookingTransaction } from "./transaction-helper.js";
 import * as hotelsRepository from "../../repositories/mysql/hotels-repository.js";
 import * as bookingsRepository from "../../repositories/mysql/bookings-repository.js";
@@ -52,115 +42,69 @@ function buildError(errorCode, message, httpStatus) {
   };
 }
 
-/**
- * @typedef {Object} HotelBookingPayload
- * @property {string} hotelId
- * @property {string} roomType
- * @property {string} checkInDate  - ISO date string (YYYY-MM-DD)
- * @property {string} checkOutDate - ISO date string (YYYY-MM-DD)
- * @property {number} [rooms]      - default 1
- * @property {string} paymentMethodToken
- * @property {number|null} [expectedTotalPrice]
- * @property {string|null} [notes]
- */
+function generateBookingReference() {
+  // Simple human-readable reference: KYK-RANDOM
+  return `KYK-${Math.random().toString(36).substring(2, 8).toUpperCase()}`;
+}
 
-/**
- * Create a hotel booking with transactional booking + billing.
- *
- * @param {string} userId
- * @param {HotelBookingPayload} payload
- * @returns {Promise<import("./create-flight-booking-service.js").BookingServiceResult>}
- */
 export async function createHotelBookingService(userId, payload) {
   if (!userId) {
-    return buildError(
-      "invalid_user",
-      "A valid userId is required to create a booking.",
-      400
-    );
+    return buildError("invalid_user", "A valid userId is required.", 400);
   }
 
   if (!payload?.hotelId || !payload?.roomType) {
-    return buildError(
-      "invalid_hotel_payload",
-      "hotelId and roomType are required.",
-      400
-    );
+    return buildError("invalid_hotel_payload", "hotelId and roomType are required.", 400);
   }
 
   if (!payload.checkInDate || !payload.checkOutDate) {
-    return buildError(
-      "invalid_date_range",
-      "Both checkInDate and checkOutDate are required.",
-      400
-    );
+    return buildError("invalid_date_range", "Both checkInDate and checkOutDate are required.", 400);
   }
 
   if (!payload.paymentMethodToken) {
-    return buildError(
-      "missing_payment_method",
-      "A paymentMethodToken is required to complete the booking.",
-      400
-    );
+    return buildError("missing_payment_method", "Payment token required.", 400);
   }
 
   const rooms = Number(payload.rooms ?? 1);
   if (!Number.isInteger(rooms) || rooms <= 0) {
-    return buildError(
-      "invalid_room_count",
-      "rooms must be a positive integer.",
-      400
-    );
+    return buildError("invalid_room_count", "rooms must be a positive integer.", 400);
   }
 
   const checkIn = new Date(payload.checkInDate);
   const checkOut = new Date(payload.checkOutDate);
   if (!(checkIn < checkOut)) {
-    return buildError(
-      "invalid_date_range",
-      "checkOutDate must be after checkInDate.",
-      400
-    );
+    return buildError("invalid_date_range", "checkOutDate must be after checkInDate.", 400);
   }
 
-  const nights =
-    Math.max(
-      1,
-      Math.round(
-        (checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)
-      )
-    );
+  const nights = Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
 
   let txResult = null;
 
   try {
     txResult = await runInBookingTransaction("createHotelBooking", async (connection) => {
       // 1) Lock hotel room inventory
-      const room =
-        await hotelsRepository.findHotelRoomByHotelAndTypeForUpdate(
+      let room;
+      if (payload.roomType === 'STANDARD') {
+        room = await hotelsRepository.findAnyAvailableRoomTypeForUpdate(connection, payload.hotelId);
+      } else {
+        room = await hotelsRepository.findHotelRoomByHotelAndTypeForUpdate(
           connection,
           {
             hotelId: payload.hotelId,
             roomType: payload.roomType,
           }
         );
-
-      if (!room || !room.is_active) {
-        throw new BookingDomainError(
-          "room_not_found",
-          "Requested room type not found or inactive.",
-          {},
-          404
-        );
       }
 
-      const roomsAvailable =
-        room.rooms_available ?? room.roomsAvailable ?? 0;
+      if (!room || !room.is_active) {
+        throw new BookingDomainError("room_not_found", "Requested room type not found or inactive.", {}, 404);
+      }
+
+      const roomsAvailable = room.rooms_available ?? room.roomsAvailable ?? 0;
 
       if (roomsAvailable < rooms) {
         throw new BookingDomainError(
           "no_inventory",
-          "Not enough rooms available for this room type.",
+          "Not enough rooms available.",
           { roomsRequested: rooms, roomsAvailable },
           409
         );
@@ -173,32 +117,36 @@ export async function createHotelBookingService(userId, payload) {
       );
 
       if (!Number.isFinite(nightlyPrice) || nightlyPrice <= 0) {
-        throw new BookingDomainError(
-          "invalid_price",
-          "Unable to determine a valid room price.",
-          {},
-          400
-        );
+        throw new BookingDomainError("invalid_price", "Unable to determine a valid room price.", {}, 400);
       }
 
       const totalAmount = nightlyPrice * nights * rooms;
       const currency = room.currency || "USD";
 
       // 2) Create booking header
-      const booking = await bookingsRepository.createBooking(connection, {
-        userId,
-        status: "PENDING",
-        totalAmount,
-        currency,
-        startDate: checkIn,
-        endDate: checkOut,
-        notes: payload.notes || null,
-      });
+      const bookingId = randomUUID();
+      const bookingReference = generateBookingReference();
+
+      const booking = await bookingsRepository.createBooking(
+        {
+          id: bookingId,
+          userId,
+          bookingReference,
+          status: "PENDING",
+          totalAmount,
+          currency,
+          startDate: checkIn,
+          endDate: checkOut,
+          notes: payload.notes || null,
+        },
+        connection
+      );
 
       // 3) Create booking item
+      const itemId = randomUUID();
       const bookingItem = await bookingsRepository.createBookingItem(
-        connection,
         {
+          id: itemId,
           bookingId: booking.id,
           itemType: "HOTEL",
           hotelId: payload.hotelId,
@@ -216,7 +164,8 @@ export async function createHotelBookingService(userId, payload) {
             rooms,
             requestedTotalPrice: payload.expectedTotalPrice ?? null,
           },
-        }
+        },
+        connection
       );
 
       // 4) Decrement room inventory
@@ -234,9 +183,10 @@ export async function createHotelBookingService(userId, payload) {
       });
 
       // 6) Billing transaction
-      const billing = await billingRepository.createBillingTransaction(
-        connection,
+      const billingId = randomUUID();
+      const billing = await billingRepository.insertBillingTransaction(
         {
+          id: billingId,
           bookingId: booking.id,
           userId,
           amount: totalAmount,
@@ -249,14 +199,16 @@ export async function createHotelBookingService(userId, payload) {
             ? null
             : paymentResult.errorType || "payment_failed",
           rawResponse: paymentResult.rawResponse ?? null,
-        }
+        },
+        connection
       );
 
       if (!paymentResult.success) {
         await bookingsRepository.updateBookingStatus(
-          connection,
           booking.id,
-          "FAILED"
+          "FAILED",
+          undefined,
+          connection
         );
 
         throw new BookingDomainError(
@@ -272,9 +224,10 @@ export async function createHotelBookingService(userId, payload) {
 
       // 7) Mark booking confirmed
       await bookingsRepository.updateBookingStatus(
-        connection,
         booking.id,
-        "CONFIRMED"
+        "CONFIRMED",
+        undefined,
+        connection
       );
 
       return {
@@ -284,13 +237,17 @@ export async function createHotelBookingService(userId, payload) {
       };
     });
 
-    await publishBookingConfirmed(
-      txResult.booking,
-      [txResult.bookingItem],
-      txResult.billing,
-      userId,
-      "createHotelBookingService"
-    );
+    try {
+      await publishBookingConfirmed(
+        txResult.booking,
+        [txResult.bookingItem],
+        txResult.billing,
+        userId,
+        "createHotelBookingService"
+      );
+    } catch (kafkaErr) {
+      console.warn("[bookings] Failed to publish booking confirmation event:", kafkaErr.message);
+    }
 
     return buildSuccess("booking_created", {
       booking: txResult.booking,
@@ -300,57 +257,21 @@ export async function createHotelBookingService(userId, payload) {
   } catch (err) {
     if (err instanceof BookingDomainError) {
       try {
-        const maybeBooking =
-          txResult?.booking ?? err.details?.booking ?? null;
-        await publishBookingFailed(
-          maybeBooking,
-          userId,
-          err.code,
-          "createHotelBookingService"
-        );
+        const maybeBooking = txResult?.booking ?? err.details?.booking ?? null;
+        await publishBookingFailed(maybeBooking, userId, err.code, "createHotelBookingService");
       } catch (eventErr) {
-        // eslint-disable-next-line no-console
-        console.error(
-          "[bookings] Failed to publish hotel booking failure event:",
-          eventErr
-        );
+        console.error("[bookings] Failed to publish hotel booking failure event:", eventErr);
       }
-
-      // eslint-disable-next-line no-console
-      console.warn(
-        "[bookings] Hotel booking domain error:",
-        err.code,
-        err.message
-      );
-
       return buildError(err.code, err.message, err.httpStatus);
     }
 
-    // eslint-disable-next-line no-console
-    console.error(
-      "[bookings] Unexpected error while creating hotel booking:",
-      err
-    );
-
+    console.error("[bookings] Unexpected error while creating hotel booking:", err);
     try {
-      await publishBookingFailed(
-        txResult?.booking ?? null,
-        userId,
-        "internal_error",
-        "createHotelBookingService"
-      );
+      await publishBookingFailed(txResult?.booking ?? null, userId, "internal_error", "createHotelBookingService");
     } catch (eventErr) {
-      // eslint-disable-next-line no-console
-      console.error(
-        "[bookings] Failed to publish hotel booking failure event (internal):",
-        eventErr
-      );
+      console.error("[bookings] Failed to publish hotel booking failure event (internal):", eventErr);
     }
 
-    return buildError(
-      "internal_error",
-      "An unexpected error occurred while creating the hotel booking.",
-      500
-    );
+    return buildError("internal_error", "An unexpected error occurred.", 500);
   }
 }

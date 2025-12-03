@@ -6,21 +6,29 @@
  * - Sidebar filters: Price, Star Rating.
  * - Sorting: Price, Stars.
  * - Grid layout for property cards.
+ * - Triggers HotelBookingModal.
  */
 
 import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { searchHotels } from '../api';
+import { useAuth } from '@/features/auth/use-auth';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import LoadingSpinner from '@/components/loading-spinner';
 import StatusBanner from '@/components/status-banner';
 import { Building, MapPin, Star } from 'lucide-react';
+import HotelBookingModal from '@/features/bookings/components/hotel-booking-modal';
 
 export default function HotelResultsGrid() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
   
+  const [selectedHotel, setSelectedHotel] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
   const [filters, setFilters] = useState({
     priceMax: '',
     minStars: '',
@@ -49,11 +57,26 @@ export default function HotelResultsGrid() {
     setFilters(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleSelect = (hotel) => {
+    if (!user) {
+      navigate('/auth/login', { state: { from: window.location } });
+      return;
+    }
+    setSelectedHotel(hotel);
+    setIsModalOpen(true);
+  };
+
   const results = data?.items || [];
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
-      {/* Sidebar */}
+      <HotelBookingModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        hotel={selectedHotel}
+        searchParams={queryParams}
+      />
+
       <aside className="w-full md:w-64 space-y-6">
         <div className="p-4 border rounded-lg bg-card">
           <h3 className="font-semibold mb-4">Filters</h3>
@@ -89,9 +112,7 @@ export default function HotelResultsGrid() {
         </div>
       </aside>
 
-      {/* Main Grid */}
       <div className="flex-1 space-y-4">
-        {/* Header */}
         <div className="flex justify-between items-center bg-muted/30 p-3 rounded-lg">
           <span className="text-sm text-muted-foreground">
             {isLoading ? 'Searching...' : `${data?.total || 0} properties found`}
@@ -110,7 +131,6 @@ export default function HotelResultsGrid() {
           </div>
         </div>
 
-        {/* Content */}
         {isLoading ? (
           <LoadingSpinner centered className="min-h-[300px]" />
         ) : error ? (
@@ -125,7 +145,6 @@ export default function HotelResultsGrid() {
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {results.map((hotel) => (
               <div key={hotel.id} className="border rounded-lg overflow-hidden bg-card hover:shadow-lg transition-shadow flex flex-col">
-                {/* Image Placeholder */}
                 <div className="h-48 bg-muted flex items-center justify-center relative">
                   <Building className="h-12 w-12 text-muted-foreground/30" />
                   <div className="absolute top-2 right-2 bg-black/70 text-white px-2 py-1 rounded text-xs font-bold flex items-center gap-1">
@@ -146,7 +165,7 @@ export default function HotelResultsGrid() {
                       <p className="text-2xl font-bold">{hotel.currency} {hotel.basePricePerNight}</p>
                       <p className="text-xs text-muted-foreground">per night</p>
                     </div>
-                    <Button size="sm">View</Button>
+                    <Button size="sm" onClick={() => handleSelect(hotel)}>View</Button>
                   </div>
                 </div>
               </div>

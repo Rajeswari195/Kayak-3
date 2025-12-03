@@ -276,12 +276,12 @@ export async function createHotel(input, connection = null) {
   if (!row) {
     throw new Error(
       "[hotels-repository] Failed to fetch hotel after INSERT (id=" +
-        input.id +
-        ")"
+      input.id +
+      ")"
     );
   }
 
-  return mapHotelRowToHotel(/** @type {HotelRow} */ (row));
+  return mapHotelRowToHotel(/** @type {HotelRow} */(row));
 }
 
 /**
@@ -379,7 +379,7 @@ export async function updateHotel(fieldsToUpdate, connection = null) {
     return null;
   }
 
-  return mapHotelRowToHotel(/** @type {HotelRow} */ (row));
+  return mapHotelRowToHotel(/** @type {HotelRow} */(row));
 }
 
 /**
@@ -440,7 +440,7 @@ export async function findHotelById(
     return null;
   }
 
-  return mapHotelRowToHotel(/** @type {HotelRow} */ (row));
+  return mapHotelRowToHotel(/** @type {HotelRow} */(row));
 }
 
 /**
@@ -519,8 +519,63 @@ export async function searchHotels(
   const rows = await mysqlQuery(itemsSql, itemsParams, connection);
 
   const items = rows.map((r) =>
-    mapHotelRowToHotel(/** @type {HotelRow} */ (r))
+    mapHotelRowToHotel(/** @type {HotelRow} */(r))
   );
 
   return { items, total };
+}
+
+/**
+ * Find a hotel room by hotel ID and room type, locking the row for update.
+ *
+ * @param {import("mysql2/promise").PoolConnection} connection
+ * @param {{ hotelId: string, roomType: string }} criteria
+ * @returns {Promise<any | null>}
+ */
+export async function findHotelRoomByHotelAndTypeForUpdate(connection, { hotelId, roomType }) {
+  const sql = `
+    SELECT *
+    FROM hotel_rooms
+    WHERE hotel_id = ? AND room_type = ?
+    FOR UPDATE
+  `;
+  const [row] = await mysqlQuery(sql, [hotelId, roomType], connection);
+  return row || null;
+}
+
+/**
+ * Find any available room type for a hotel, locking the row for update.
+ * Used as a fallback when specific room type is not provided or is generic.
+ *
+ * @param {import("mysql2/promise").PoolConnection} connection
+ * @param {string} hotelId
+ * @returns {Promise<any | null>}
+ */
+export async function findAnyAvailableRoomTypeForUpdate(connection, hotelId) {
+  const sql = `
+    SELECT *
+    FROM hotel_rooms
+    WHERE hotel_id = ? AND is_active = 1
+    ORDER BY base_price_per_night ASC
+    LIMIT 1
+    FOR UPDATE
+  `;
+  const [row] = await mysqlQuery(sql, [hotelId], connection);
+  return row || null;
+}
+
+/**
+ * Decrement the available rooms for a specific hotel room record.
+ *
+ * @param {import("mysql2/promise").PoolConnection} connection
+ * @param {{ hotelRoomId: string, rooms: number }} params
+ * @returns {Promise<void>}
+ */
+export async function decrementRoomsAvailable(connection, { hotelRoomId, rooms }) {
+  const sql = `
+    UPDATE hotel_rooms
+    SET rooms_available = rooms_available - ?
+    WHERE id = ?
+  `;
+  await mysqlQuery(sql, [rooms, hotelRoomId], connection);
 }

@@ -118,10 +118,69 @@ function normalizeDateOnly(value) {
  * @param {{ scope: "past"|"current"|"future"|"all", now: Date }} options
  * @returns {Promise<BookingRecord[]>}
  */
-export async function getUserBookingsByScope(userId, { scope, now }) {
-  // Implement SQL query using your MySQL pool/knex:
-  // - Use `scope` and `now` to filter on start_date/end_date columns.
-  // - Join booking_items if you want item-level detail.
+
+/**
+ * Retrieve bookings for a user filtered by scope and reference time.
+ * Populates the `items` array for each booking.
+ *
+ * @param {string} userId
+ * @param {{ scope: "past"|"current"|"future"|"all", now: Date }} options
+ * @param {import("mysql2/promise").PoolConnection | null} [connection]
+ * @returns {Promise<Object[]>}
+ */
+export async function getUserBookingsByScope(userId, { scope, now }, connection = null) {
+  const today = now.toISOString().slice(0, 10); // YYYY-MM-DD
+
+  let sql = `
+    SELECT *
+    FROM bookings
+    WHERE user_id = ?
+  `;
+  const params = [userId];
+
+  if (scope === "past") {
+    sql += " AND end_date < ?";
+    params.push(today);
+  } else if (scope === "current") {
+    sql += " AND start_date <= ? AND end_date >= ?";
+    params.push(today, today);
+  } else if (scope === "future") {
+    sql += " AND start_date > ?";
+    params.push(today);
+  }
+
+  sql += " ORDER BY created_at DESC";
+
+  // 1. Fetch Bookings
+  const rows = await mysqlQuery(sql, params, connection);
+  const bookings = rows.map(mapBookingRow);
+
+  if (bookings.length === 0) {
+    return [];
+  }
+
+  // 2. Fetch Booking Items for these bookings
+  const bookingIds = bookings.map((b) => b.id);
+  if (bookingIds.length > 0) {
+    // Create placeholder string: ?,?,?
+    const placeholders = bookingIds.map(() => "?").join(",");
+    const itemsSql = `
+      SELECT *
+      FROM booking_items
+      WHERE booking_id IN (${placeholders})
+      ORDER BY created_at ASC
+    `;
+    
+    const itemRows = await mysqlQuery(itemsSql, bookingIds, connection);
+    const allItems = itemRows.map(mapBookingItemRow);
+
+    // 3. Attach items to their parent booking
+    for (const booking of bookings) {
+      booking.items = allItems.filter((item) => item.bookingId === booking.id);
+    }
+  }
+
+  return bookings;
 }
 
 
@@ -212,7 +271,7 @@ function mapBookingItemRow(row) {
  * @param {import("mysql2/promise").PoolConnection | null} [connection]
  * @returns {Promise<BookingRecord>}
  */
-export async function insertBooking(booking, connection = null) {
+export async function createBooking(booking, connection = null) {
     const sql = `
     INSERT INTO bookings (
       id,
@@ -260,7 +319,7 @@ export async function insertBooking(booking, connection = null) {
  * @param {import("mysql2/promise").PoolConnection | null} [connection]
  * @returns {Promise<BookingItemRecord>}
  */
-export async function insertBookingItem(item, connection = null) {
+export async function createBookingItem(item, connection = null) {
     const sql = `
     INSERT INTO booking_items (
       id,

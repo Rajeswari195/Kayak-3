@@ -567,3 +567,9 @@ export async function searchCars(
 
   return { items, total };
 }
+
+export async function findCarByIdForUpdate(connection, carId) {
+  const sql = `SELECT * FROM cars WHERE id = ? FOR UPDATE`;
+  const [rows] = await connection.query(sql, [carId]);
+  return rows.length ? rows[0] : null;
+}

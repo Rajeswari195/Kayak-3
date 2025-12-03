@@ -569,3 +569,14 @@ export async function searchFlights(
 
   return { items, total };
 }
+
+export async function findFlightByIdForUpdate(connection, flightId) {
+  const sql = `SELECT * FROM flights WHERE id = ? FOR UPDATE`;
+  const [rows] = await connection.query(sql, [flightId]);
+  return rows.length ? rows[0] : null;
+}
+
+export async function decrementSeatsAvailable(connection, { flightId, seats }) {
+  const sql = `UPDATE flights SET seats_available = seats_available - ? WHERE id = ?`;
+  await connection.query(sql, [seats, flightId]);
+}

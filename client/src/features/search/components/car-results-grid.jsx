@@ -5,20 +5,28 @@
  * - Fetches data using React Query and search params.
  * - Sidebar filters: Price, Type (Economy, SUV, etc.).
  * - Displays car details (Transmission, Seats).
+ * - Triggers CarBookingModal.
  */
 
 import React, { useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { searchCars } from '../api';
+import { useAuth } from '@/features/auth/use-auth';
 import { Button } from '@/ui/button';
 import { Input } from '@/ui/input';
 import LoadingSpinner from '@/components/loading-spinner';
 import StatusBanner from '@/components/status-banner';
 import { Car, Users, Fuel, Gauge } from 'lucide-react';
+import CarBookingModal from '@/features/bookings/components/car-booking-modal';
 
 export default function CarResultsGrid() {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+
+  const [selectedCar, setSelectedCar] = useState(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   
   const [filters, setFilters] = useState({
     priceMax: '',
@@ -48,11 +56,26 @@ export default function CarResultsGrid() {
     setFilters(prev => ({ ...prev, [name]: value }));
   };
 
+  const handleSelect = (car) => {
+    if (!user) {
+      navigate('/auth/login', { state: { from: window.location } });
+      return;
+    }
+    setSelectedCar(car);
+    setIsModalOpen(true);
+  };
+
   const results = data?.items || [];
 
   return (
     <div className="flex flex-col md:flex-row gap-6">
-      {/* Sidebar */}
+      <CarBookingModal
+        isOpen={isModalOpen}
+        onClose={() => setIsModalOpen(false)}
+        car={selectedCar}
+        searchParams={queryParams}
+      />
+
       <aside className="w-full md:w-64 space-y-6">
         <div className="p-4 border rounded-lg bg-card">
           <h3 className="font-semibold mb-4">Filters</h3>
@@ -89,7 +112,6 @@ export default function CarResultsGrid() {
         </div>
       </aside>
 
-      {/* Main Grid */}
       <div className="flex-1 space-y-4">
         <div className="flex justify-between items-center bg-muted/30 p-3 rounded-lg">
           <span className="text-sm text-muted-foreground">
@@ -154,7 +176,7 @@ export default function CarResultsGrid() {
                     <p className="text-xl font-bold">{car.currency} {car.dailyPrice}</p>
                     <p className="text-xs text-muted-foreground">per day</p>
                   </div>
-                  <Button size="sm">Select</Button>
+                  <Button size="sm" onClick={() => handleSelect(car)}>Select</Button>
                 </div>
               </div>
             ))}

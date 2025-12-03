@@ -11,10 +11,8 @@ import {
   getUserTraceAnalyticsController,
   getCohortTraceController,
 } from "../controllers/analytics-controller.js";
-import {
-  requireAuth,
-  requireAdmin,
-} from "../middlewares/auth-middleware.js";
+import { requireAuth } from "../middlewares/auth-middleware.js";
+import { requireAdmin } from "../middlewares/role-middleware.js";
 
 const router = express.Router();
 
