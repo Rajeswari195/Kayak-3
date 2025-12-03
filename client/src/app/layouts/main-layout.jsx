@@ -1,25 +1,18 @@
 /**
  * @file client/src/app/layouts/main-layout.jsx
  * @description Main application layout for public and user-facing routes.
- * * Features:
- * - Responsive Navbar with logo and navigation links.
- * - Footer with copyright info.
- * - Renders child routes via <Outlet />.
- * - Connects to real AuthContext to toggle Log in / Profile links.
  */
 
 import React from 'react';
 import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Plane, User, LogOut } from 'lucide-react';
+import { Plane, User, LogOut, ShieldAlert } from 'lucide-react';
 import { useAuth } from '@/features/auth/use-auth';
 import { Button } from '@/ui/button';
-import { useClickstream } from '@/features/analytics/use-clickstream';
 
 export default function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  useClickstream();
 
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'ADMIN' || user?.isAdmin === true;
@@ -68,9 +61,10 @@ export default function MainLayout() {
             {isAdmin && (
               <Link 
                 to="/admin" 
-                className="hidden md:inline-flex text-sm font-medium text-destructive transition-colors hover:text-destructive/80"
+                className="inline-flex items-center gap-1 text-sm font-medium text-destructive border border-destructive/20 bg-destructive/5 px-3 py-1.5 rounded-md transition-colors hover:bg-destructive/10"
               >
-                Admin Dashboard
+                <ShieldAlert className="h-4 w-4" />
+                Admin
               </Link>
             )}
             

@@ -23,9 +23,12 @@ import RegisterPage from './auth/register-page';
 
 // User Pages
 import ProfilePage from './profile/profile-page';
-
-// Search Page (Step 45)
 import SearchPage from './search/search-page';
+
+// Admin Pages
+import AdminListingsPage from './admin/admin-listings-page';
+import AdminUsersPage from './admin/admin-users-page';
+import AdminBillingPage from './admin/admin-billing-page';
 
 // Placeholder components for routes not yet implemented
 const Placeholder = ({ title }) => (
@@ -49,9 +52,7 @@ export default function AppRouter() {
         <Route path="/" element={<Navigate to="/search" replace />} />
         
         {/* Publicly accessible features */}
-        {/* Updated to use actual SearchPage */}
         <Route path="/search" element={<SearchPage />} />
-        
         <Route path="/concierge" element={<Placeholder title="AI Concierge" />} />
 
         {/* Protected User Routes */}
@@ -64,10 +65,13 @@ export default function AppRouter() {
       {/* Protected Admin Routes */}
       <Route element={<AdminRoute />}>
         <Route path="/admin" element={<AdminLayout />}>
-          <Route index element={<Placeholder title="Admin Overview" />} />
-          <Route path="listings" element={<Placeholder title="Manage Listings" />} />
-          <Route path="users" element={<Placeholder title="Manage Users" />} />
-          <Route path="billing" element={<Placeholder title="Billing Reports" />} />
+          <Route index element={<Navigate to="/admin/listings" replace />} />
+          <Route path="listings" element={<AdminListingsPage />} />
+          
+          {/* Updated to use real Admin pages */}
+          <Route path="users" element={<AdminUsersPage />} />
+          <Route path="billing" element={<AdminBillingPage />} />
+          
           <Route path="analytics" element={<Placeholder title="Analytics Dashboard" />} />
         </Route>
       </Route>

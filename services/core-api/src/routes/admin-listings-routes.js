@@ -1,100 +1,42 @@
 /**
  * @file admin-listings-routes.js
- * @description
- * Express router for admin-only listing management endpoints:
- *   - POST /admin/flights
- *   - PUT  /admin/flights/:id
- *   - POST /admin/hotels
- *   - PUT  /admin/hotels/:id
- *   - POST /admin/cars
- *   - PUT  /admin/cars/:id
- *
- * Responsibilities:
- * - Apply authentication and admin role middlewares.
- * - Map HTTP paths to admin controller functions.
- *
- * Notes:
- * - This router should be mounted from `routes/index.js` under a common
- *   prefix such as `/api`, e.g., `/api/admin/flights`.
- * - It assumes that `auth-middleware.js` exposes `requireAuth` and
- *   `role-middleware.js` exposes `requireAdmin`, as established in Step 10.
+ * @description Admin routes for listings.
  */
-
-
 
 import { Router } from "express";
 import { requireAuth } from "../middlewares/auth-middleware.js";
 import { requireAdmin } from "../middlewares/role-middleware.js";
 
 import {
+  getAdminFlightsController,
   createFlightListing,
   updateFlightListing,
+  getAdminHotelsController,
   createHotelListing,
   updateHotelListing,
+  getAdminCarsController,
   createCarListing,
   updateCarListing,
 } from "../controllers/admin-listings-controller.js";
 
 const router = Router();
 
-// ---------------------------------------------------------------------------
-// Flights
-// ---------------------------------------------------------------------------
+// Middleware for all routes in this file
+router.use(requireAuth, requireAdmin);
 
-// Create a new flight listing.
-router.post(
-  "/admin/flights",
-  requireAuth,
-  requireAdmin,
-  createFlightListing
-);
+// FLIGHTS
+router.get("/admin/flights", getAdminFlightsController);
+router.post("/admin/flights", createFlightListing);
+router.put("/admin/flights/:id", updateFlightListing);
 
-// Update an existing flight listing.
-router.put(
-  "/admin/flights/:id",
-  requireAuth,
-  requireAdmin,
-  updateFlightListing
-);
+// HOTELS
+router.get("/admin/hotels", getAdminHotelsController);
+router.post("/admin/hotels", createHotelListing);
+router.put("/admin/hotels/:id", updateHotelListing);
 
-// ---------------------------------------------------------------------------
-// Hotels
-// ---------------------------------------------------------------------------
-
-// Create a new hotel listing.
-router.post(
-  "/admin/hotels",
-  requireAuth,
-  requireAdmin,
-  createHotelListing
-);
-
-// Update an existing hotel listing.
-router.put(
-  "/admin/hotels/:id",
-  requireAuth,
-  requireAdmin,
-  updateHotelListing
-);
-
-// ---------------------------------------------------------------------------
-// Cars
-// ---------------------------------------------------------------------------
-
-// Create a new car listing.
-router.post(
-  "/admin/cars",
-  requireAuth,
-  requireAdmin,
-  createCarListing
-);
-
-// Update an existing car listing.
-router.put(
-  "/admin/cars/:id",
-  requireAuth,
-  requireAdmin,
-  updateCarListing
-);
+// CARS
+router.get("/admin/cars", getAdminCarsController);
+router.post("/admin/cars", createCarListing);
+router.put("/admin/cars/:id", updateCarListing);
 
 export default router;

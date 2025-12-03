@@ -1,10 +1,8 @@
 /**
  * @file client/src/features/auth/components/login-form.jsx
  * @description User login form component.
- * * Features:
- * - Email/Password inputs.
- * - interacting with AuthContext.
- * - Error handling with StatusBanner.
+ * * Updates:
+ * - Intelligent redirect: Admins go to /admin, Users go to /search (or previous page).
  */
 
 import React, { useState } from 'react';
@@ -27,13 +25,12 @@ export default function LoginForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // If user was redirected here from a protected route, go back there after login
-  const from = location.state?.from?.pathname || '/search';
+  // Did the user try to access a protected page?
+  const from = location.state?.from?.pathname;
 
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
-    // Clear errors when user types
     if (error) setError(null);
   };
 
@@ -43,14 +40,25 @@ export default function LoginForm() {
     setError(null);
 
     try {
-      await login(formData);
-      navigate(from, { replace: true });
+      const { user } = await login(formData);
+      
+      if (from) {
+        // If they were redirected to login, send them back where they wanted to go
+        navigate(from, { replace: true });
+      } else {
+        // Default Redirects based on Role
+        const isAdmin = user.role === 'ADMIN' || user.isAdmin === true;
+        if (isAdmin) {
+          navigate('/admin', { replace: true });
+        } else {
+          navigate('/search', { replace: true });
+        }
+      }
+
     } catch (err) {
       console.error("Login error:", err);
-      // Extract code if available from our standardized API error object
       const code = err.code || 'login_failed';
       const message = err.message || 'Failed to log in. Please check your credentials.';
-      
       setError({ code, message });
     } finally {
       setIsSubmitting(false);
@@ -62,7 +70,7 @@ export default function LoginForm() {
       <form onSubmit={handleSubmit}>
         <div className="grid gap-4">
           <div className="grid gap-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="email">
+            <label className="text-sm font-medium leading-none" htmlFor="email">
               Email
             </label>
             <Input
@@ -80,7 +88,7 @@ export default function LoginForm() {
             />
           </div>
           <div className="grid gap-2">
-            <label className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70" htmlFor="password">
+            <label className="text-sm font-medium leading-none" htmlFor="password">
               Password
             </label>
             <Input
