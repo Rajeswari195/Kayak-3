@@ -16,6 +16,7 @@ import MainLayout from './layouts/main-layout';
 import AdminLayout from './layouts/admin-layout';
 import ProtectedRoute from './protected-route';
 import AdminRoute from './admin-route';
+import AdminAnalyticsPage from './admin/admin-analytics-page';
 
 // Auth Pages
 import LoginPage from './auth/login-page';
@@ -72,7 +73,7 @@ export default function AppRouter() {
           <Route path="users" element={<AdminUsersPage />} />
           <Route path="billing" element={<AdminBillingPage />} />
           
-          <Route path="analytics" element={<Placeholder title="Analytics Dashboard" />} />
+          <Route path="analytics" element={<AdminAnalyticsPage />}/>
         </Route>
       </Route>
 
