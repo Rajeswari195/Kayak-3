@@ -55,7 +55,7 @@ function BookingCard({ booking }) {
             <span>{booking.startDate}</span>
           </div>
           {booking.endDate && (
-             <div className="text-xs text-muted-foreground">to {booking.endDate}</div>
+            <div className="text-xs text-muted-foreground">to {booking.endDate}</div>
           )}
         </div>
       </div>
@@ -71,7 +71,7 @@ function BookingCard({ booking }) {
               </div>
               <div className="flex-1">
                 <p className="font-medium">
-                  {item.itemType} 
+                  {item.itemType}
                   {item.quantity > 1 && <span className="text-muted-foreground text-xs ml-1">x{item.quantity}</span>}
                 </p>
                 <p className="text-xs text-muted-foreground">
@@ -97,7 +97,7 @@ export default function BookingHistoryList() {
 
   useEffect(() => {
     let mounted = true;
-    
+
     async function fetch() {
       setIsLoading(true);
       setError(null);
@@ -107,8 +107,8 @@ export default function BookingHistoryList() {
         // Let's fetch all via specific scope calls or just one call if API supports it.
         // The API getUserBookings({ scope }) supports scope.
         // We'll fetch the active scope.
-        const data = await getUserBookings({ scope: activeTab });
-        if (mounted) setBookings(data || []);
+        const response = await getUserBookings({ scope: activeTab });
+        if (mounted) setBookings(response.data?.bookings || []);
       } catch (err) {
         if (mounted) setError(err.message || "Failed to load bookings");
       } finally {
@@ -130,8 +130,8 @@ export default function BookingHistoryList() {
             onClick={() => setActiveTab(tab.id)}
             className={cn(
               "px-3 py-1.5 text-sm font-medium rounded-sm transition-all",
-              activeTab === tab.id 
-                ? "bg-background text-foreground shadow-sm" 
+              activeTab === tab.id
+                ? "bg-background text-foreground shadow-sm"
                 : "text-muted-foreground hover:bg-background/50"
             )}
           >

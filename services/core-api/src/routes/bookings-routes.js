@@ -79,4 +79,15 @@ router.get(
     getUserBookingsController
 );
 
+/**
+ * GET /bookings/my
+ *
+ * Alias for /bookings to match frontend expectations.
+ */
+router.get(
+    "/bookings/my",
+    requireAuth,
+    getUserBookingsController
+);
+
 export default router;
