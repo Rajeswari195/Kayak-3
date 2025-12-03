@@ -13,11 +13,13 @@ import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
 import { Plane, User, LogOut } from 'lucide-react';
 import { useAuth } from '@/features/auth/use-auth';
 import { Button } from '@/ui/button';
+import { useClickstream } from '@/features/analytics/use-clickstream';
 
 export default function MainLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
+  useClickstream();
 
   const isAuthenticated = !!user;
   const isAdmin = user?.role === 'ADMIN' || user?.isAdmin === true;
