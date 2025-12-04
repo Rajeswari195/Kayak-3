@@ -1,6 +1,10 @@
 /**
  * @file admin-listings-routes.js
  * @description Admin routes for listings.
+ * * Updates:
+ * - Paths are now relative (e.g., "/flights" instead of "/admin/flights").
+ * - This allows the router to be mounted under "/admin" in index.js, preventing
+ * middleware leakage to non-admin routes.
  */
 
 import { Router } from "express";
@@ -22,21 +26,22 @@ import {
 const router = Router();
 
 // Middleware for all routes in this file
+// This is safe now because this router will be mounted under "/admin"
 router.use(requireAuth, requireAdmin);
 
 // FLIGHTS
-router.get("/admin/flights", getAdminFlightsController);
-router.post("/admin/flights", createFlightListing);
-router.put("/admin/flights/:id", updateFlightListing);
+router.get("/flights", getAdminFlightsController);
+router.post("/flights", createFlightListing);
+router.put("/flights/:id", updateFlightListing);
 
 // HOTELS
-router.get("/admin/hotels", getAdminHotelsController);
-router.post("/admin/hotels", createHotelListing);
-router.put("/admin/hotels/:id", updateHotelListing);
+router.get("/hotels", getAdminHotelsController);
+router.post("/hotels", createHotelListing);
+router.put("/hotels/:id", updateHotelListing);
 
 // CARS
-router.get("/admin/cars", getAdminCarsController);
-router.post("/admin/cars", createCarListing);
-router.put("/admin/cars/:id", updateCarListing);
+router.get("/cars", getAdminCarsController);
+router.post("/cars", createCarListing);
+router.put("/cars/:id", updateCarListing);
 
 export default router;

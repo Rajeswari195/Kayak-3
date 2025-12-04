@@ -13,21 +13,23 @@ const router = express.Router();
 router.use(usersRouter);
 
 // Admin-only routes are mounted under /admin
+// This router handles /admin/users, /admin/billing
 router.use("/admin", adminRouter);
 
-// Public search endpoints
+// Admin listing routes (now mounted under /admin to prevent middleware leakage)
+// This router handles /admin/flights, /admin/hotels, /admin/cars
+router.use("/admin", adminListingsRouter);
+
+// Public search endpoints (e.g. /search/flights)
 router.use(listingsRouter);
 
-// Admin listing management
-router.use(adminListingsRouter);
-
-// Bookings routes
+// Bookings routes (e.g. /bookings)
 router.use(bookingsRouter);
 
-// Analytics and clickstream tracking
+// Analytics and clickstream tracking (e.g. /analytics)
 router.use("/analytics", clickstreamRouter);
 
-// Reviews routes
+// Reviews routes (e.g. /reviews)
 router.use(reviewsRouter);
 
 export default router;
