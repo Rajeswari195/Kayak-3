@@ -8,6 +8,10 @@ import {
   adminDeactivateUserController
 } from "../controllers/admin-users-controller.js";
 
+import {
+  getAdminBillingReportsController
+} from "../controllers/admin-billing-controller.js";
+
 const router = express.Router();
 
 // All /admin routes require authenticated ADMIN users.
@@ -18,5 +22,8 @@ router.use(requireAdmin);
 router.get("/users", adminListUsersController);
 router.get("/users/:id", adminGetUserDetailController);
 router.patch("/users/:id/deactivate", adminDeactivateUserController);
+
+// Billing management
+router.get("/billing", getAdminBillingReportsController);
 
 export default router;
