@@ -1,100 +1,20 @@
 /**
  * @file client/src/app/layouts/main-layout.jsx
  * @description Main application layout for public and user-facing routes.
+ * * Updates:
+ * - Now uses the reusable Navbar component instead of inline header.
+ * - This ensures the new KAYAK logo is visible.
  */
 
 import React from 'react';
-import { Outlet, Link, useLocation, useNavigate } from 'react-router-dom';
-import { Plane, User, LogOut, ShieldAlert } from 'lucide-react';
-import { useAuth } from '@/features/auth/use-auth';
-import { Button } from '@/ui/button';
+import { Outlet, Link } from 'react-router-dom';
+import Navbar from '@/components/navbar';
 
 export default function MainLayout() {
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { user, logout } = useAuth();
-
-  const isAuthenticated = !!user;
-  const isAdmin = user?.role === 'ADMIN' || user?.isAdmin === true;
-
-  const handleLogout = async () => {
-    await logout();
-    navigate('/');
-  };
-
   return (
     <div className="min-h-screen flex flex-col bg-background font-sans text-foreground">
-      {/* Header / Navbar */}
-      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-        <div className="container flex h-16 items-center justify-between">
-          <div className="flex items-center gap-6">
-            <Link to="/" className="flex items-center space-x-2 font-bold text-xl text-primary">
-              <Plane className="h-6 w-6" />
-              <span>KayakClone</span>
-            </Link>
-
-            <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
-              <Link 
-                to="/search" 
-                className={`transition-colors hover:text-foreground ${location.pathname.startsWith('/search') ? 'text-foreground' : ''}`}
-              >
-                Search
-              </Link>
-              <Link 
-                to="/concierge" 
-                className={`transition-colors hover:text-foreground ${location.pathname.startsWith('/concierge') ? 'text-foreground' : ''}`}
-              >
-                AI Concierge
-              </Link>
-              {isAuthenticated && (
-                <Link 
-                  to="/bookings" 
-                  className={`transition-colors hover:text-foreground ${location.pathname.startsWith('/bookings') ? 'text-foreground' : ''}`}
-                >
-                  My Bookings
-                </Link>
-              )}
-            </nav>
-          </div>
-
-          <div className="flex items-center gap-4">
-            {isAdmin && (
-              <Link 
-                to="/admin" 
-                className="inline-flex items-center gap-1 text-sm font-medium text-destructive border border-destructive/20 bg-destructive/5 px-3 py-1.5 rounded-md transition-colors hover:bg-destructive/10"
-              >
-                <ShieldAlert className="h-4 w-4" />
-                Admin
-              </Link>
-            )}
-            
-            <div className="flex items-center gap-2">
-              {isAuthenticated ? (
-                <div className="flex items-center gap-3">
-                   <Link to="/profile">
-                     <div className="h-8 w-8 rounded-full bg-secondary flex items-center justify-center hover:bg-secondary/80 transition-colors" title="Profile">
-                        {user.profileImageUrl ? (
-                          <img src={user.profileImageUrl} alt="Profile" className="h-8 w-8 rounded-full object-cover" />
-                        ) : (
-                          <User className="h-4 w-4" />
-                        )}
-                     </div>
-                   </Link>
-                   <Button variant="ghost" size="sm" onClick={handleLogout} title="Log out">
-                     <LogOut className="h-4 w-4" />
-                   </Button>
-                </div>
-              ) : (
-                <div className="flex items-center gap-2 text-sm">
-                   <Link to="/auth/login" className="font-medium hover:underline">Log in</Link>
-                   <span className="text-muted-foreground">/</span>
-                   <Link to="/auth/register" className="font-medium hover:underline">Sign up</Link>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      </header>
+      {/* Replaced inline header with the Navbar component containing the new Logo */}
+      <Navbar />
 
       {/* Main Content Area */}
       <main className="flex-1 container py-6">
