@@ -1,6 +1,10 @@
 /**
  * @file client/src/features/users/components/user-reviews-list.jsx
  * @description Displays a list of reviews written by the user.
+ * * Features:
+ * - Fetches reviews from the backend.
+ * - Displays a loading spinner while fetching.
+ * - Renders a list of ReviewCard components with listing names.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -14,12 +18,20 @@ function ReviewCard({ review }) {
     <div className="border rounded-lg p-4 bg-card text-card-foreground shadow-sm mb-4">
       <div className="flex justify-between items-start">
         <div>
-          <h4 className="font-semibold text-sm">{review.title || "No Title"}</h4>
-          <div className="flex items-center gap-1 mt-1">
+          {/* Display the Listing Name (enriched by backend) or fallback to ID */}
+          <h4 className="font-bold text-base mb-1">
+            {review.listingName || review.listingId}
+          </h4>
+          
+          <h5 className="font-medium text-sm text-muted-foreground">
+            {review.title || "No Title"}
+          </h5>
+
+          <div className="flex items-center gap-1 mt-2">
              {Array.from({ length: 5 }).map((_, i) => (
                <Star 
                  key={i} 
-                 className={`h-3 w-3 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} 
+                 className={`h-4 w-4 ${i < review.rating ? "fill-yellow-400 text-yellow-400" : "text-gray-300"}`} 
                />
              ))}
           </div>
@@ -29,12 +41,15 @@ function ReviewCard({ review }) {
         </span>
       </div>
       
-      <p className="mt-2 text-sm text-muted-foreground line-clamp-3">
+      <p className="mt-3 text-sm leading-relaxed">
         {review.comment}
       </p>
 
-      <div className="mt-2 pt-2 border-t text-xs text-muted-foreground font-mono">
-        {review.listingType} • {review.listingId}
+      <div className="mt-3 pt-3 border-t text-xs text-muted-foreground font-mono flex items-center gap-2">
+        <span className="px-1.5 py-0.5 bg-muted rounded text-[10px] font-bold">
+          {review.listingType}
+        </span>
+        <span className="opacity-50">ID: {review.listingId}</span>
       </div>
     </div>
   );
@@ -49,10 +64,9 @@ export default function UserReviewsList() {
     async function fetch() {
       setIsLoading(true);
       try {
-        // const data = await getUserReviews();
-        // setReviews(data || []);
+        const response = await getUserReviews();
+        setReviews(response.items || []);
       } catch (err) {
-        // Backend might 404 if no reviews endpoint yet, handle gracefully
         console.warn("Reviews fetch failed", err);
         setError("Could not load reviews.");
       } finally {
@@ -75,7 +89,7 @@ export default function UserReviewsList() {
   }
 
   return (
-    <div>
+    <div className="animate-in fade-in duration-500">
       {reviews.map(r => <ReviewCard key={r.id || r._id} review={r} />)}
     </div>
   );

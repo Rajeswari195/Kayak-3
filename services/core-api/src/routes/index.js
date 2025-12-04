@@ -5,7 +5,7 @@ import listingsRouter from "./listings-routes.js";
 import adminListingsRouter from "./admin-listings-routes.js";
 import bookingsRouter from "./bookings-routes.js";
 import clickstreamRouter from "./clickstream-routes.js";
-
+import reviewsRouter from "./reviews-routes.js";
 
 const router = express.Router();
 
@@ -27,7 +27,7 @@ router.use(bookingsRouter);
 // Analytics and clickstream tracking
 router.use("/analytics", clickstreamRouter);
 
+// Reviews routes
+router.use(reviewsRouter);
+
 export default router;
-
-
-

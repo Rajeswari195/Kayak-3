@@ -3,19 +3,16 @@
  * MongoDB repository for managing clickstream events and user activity tracking.
  * This module handles logging and querying of user interactions across the platform
  * for analytics, behavior analysis, and trace diagrams.
- * 
- * Key features:
+ * * Key features:
  * - Log various event types (page views, clicks, searches, bookings)
  * - Fetch user activity traces
  * - Aggregate click statistics for analytics dashboards
  * - Support cohort analysis by city/segment
  * - Track page-level and listing-level engagement
- * 
- * @dependencies
+ * * @dependencies
  * - mongoose: MongoDB ODM for data modeling and queries
  * - clickstreamModel: Mongoose model from schema definition
- * 
- * @notes
+ * * @notes
  * - Events are append-only (never updated or deleted)
  * - Timestamps are critical for trace diagrams and session analysis
  * - Metadata field allows flexible event context storage
@@ -24,14 +21,15 @@
 
 import mongoose from 'mongoose';
 import { getMongoConnection } from '../../db/mongo.js';
+import { createClickstreamEventModel } from "../../../../../db/schema/mongo/index.js";
 
 /**
  * Get the Clickstream model from the mongo connection
- * @returns {mongoose.Model} Clickstream model
+ * @returns {Promise<mongoose.Model>} Clickstream model
  */
-function getClickstreamModel() {
-    const db = getMongoConnection();
-    return db.model('Clickstream');
+async function getClickstreamModel() {
+    const db = await getMongoConnection();
+    return createClickstreamEventModel(db);
 }
 
 /**
@@ -48,7 +46,7 @@ function getClickstreamModel() {
  */
 export async function logEvent(eventData) {
     try {
-        const Clickstream = getClickstreamModel();
+        const Clickstream = await getClickstreamModel();
 
         const event = new Clickstream({
             userId: eventData.userId || null,
@@ -77,7 +75,7 @@ export async function logEvent(eventData) {
  */
 export async function logEventsBatch(events) {
     try {
-        const Clickstream = getClickstreamModel();
+        const Clickstream = await getClickstreamModel();
 
         const eventDocs = events.map(eventData => ({
             userId: eventData.userId || null,
@@ -110,7 +108,7 @@ export async function logEventsBatch(events) {
  */
 export async function getUserTrace(userId, options = {}) {
     try {
-        const Clickstream = getClickstreamModel();
+        const Clickstream = await getClickstreamModel();
 
         const query = { userId };
 
@@ -147,7 +145,7 @@ export async function getUserTrace(userId, options = {}) {
  */
 export async function getUserSession(userId, sessionId) {
     try {
-        const Clickstream = getClickstreamModel();
+        const Clickstream = await getClickstreamModel();
 
         const events = await Clickstream.find({
             userId,

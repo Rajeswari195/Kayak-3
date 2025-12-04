@@ -5,6 +5,7 @@
 
 import React, { useState } from 'react';
 import AdminListingsTable from '@/features/admin/listings/components/admin-listings-table';
+import AddListingDialog from '@/features/admin/listings/components/add-listing-dialog';
 import { Button } from '@/ui/button';
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -17,15 +18,21 @@ const TABS = [
 
 export default function AdminListingsPage() {
   const [activeType, setActiveType] = useState('flight');
+  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
 
   return (
     <div className="space-y-6">
+      <AddListingDialog 
+        isOpen={isAddModalOpen} 
+        onClose={() => setIsAddModalOpen(false)} 
+      />
+
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Listings</h1>
           <p className="text-muted-foreground">Manage your travel inventory.</p>
         </div>
-        <Button>
+        <Button onClick={() => setIsAddModalOpen(true)}>
           <Plus className="mr-2 h-4 w-4" />
           Add Listing
         </Button>

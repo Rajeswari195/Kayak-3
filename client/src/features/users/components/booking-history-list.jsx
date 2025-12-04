@@ -5,6 +5,7 @@
  * - Fetches bookings on mount.
  * - Tabs for Past, Current, Future.
  * - Displays booking cards with status badges.
+ * - Allows reviewing past bookings (Always visible button).
  */
 
 import React, { useState, useEffect } from 'react';
@@ -12,7 +13,8 @@ import { getUserBookings } from '../api';
 import { Button } from '@/ui/button';
 import LoadingSpinner from '@/components/loading-spinner';
 import StatusBanner from '@/components/status-banner';
-import { Calendar, Plane, Building, Car, AlertCircle } from 'lucide-react';
+import ReviewFormDialog from '@/features/reviews/components/review-form-dialog';
+import { Calendar, Plane, Building, Car, AlertCircle, Star } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const TABS = [
@@ -27,9 +29,7 @@ const ICONS = {
   CAR: Car
 };
 
-function BookingCard({ booking }) {
-  // A booking might have multiple items, but usually the header has the status/total.
-  // We'll show the items briefly.
+function BookingCard({ booking, showReviewAction, onReview }) {
   const statusColors = {
     CONFIRMED: "bg-green-100 text-green-800",
     PENDING: "bg-yellow-100 text-yellow-800",
@@ -65,7 +65,7 @@ function BookingCard({ booking }) {
         {booking.items && booking.items.map((item) => {
           const Icon = ICONS[item.itemType] || AlertCircle;
           return (
-            <div key={item.id} className="flex items-center gap-3 text-sm">
+            <div key={item.id} className="flex items-center gap-3 text-sm group">
               <div className="p-2 bg-muted rounded-md">
                 <Icon className="h-4 w-4" />
               </div>
@@ -78,8 +78,24 @@ function BookingCard({ booking }) {
                   {item.unitPrice} {item.currency}
                 </p>
               </div>
-              <div className="font-medium">
-                {item.totalPrice} {item.currency}
+              
+              <div className="flex items-center gap-4">
+                <div className="font-medium">
+                  {item.totalPrice} {item.currency}
+                </div>
+                
+                {/* Review Button for Past Bookings - UPDATED: Removed 'hidden group-hover:flex' */}
+                {showReviewAction && booking.status === 'CONFIRMED' && (
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="h-7 px-2 text-xs gap-1 border-primary/20 text-primary hover:bg-primary/5"
+                    onClick={() => onReview(booking.id, item)}
+                  >
+                    <Star className="h-3 w-3" />
+                    Rate
+                  </Button>
+                )}
               </div>
             </div>
           );
@@ -95,6 +111,11 @@ export default function BookingHistoryList() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
 
+  // Review Modal State
+  const [reviewModalOpen, setReviewModalOpen] = useState(false);
+  const [selectedBookingItem, setSelectedBookingItem] = useState(null);
+  const [selectedBookingId, setSelectedBookingId] = useState(null);
+
   useEffect(() => {
     let mounted = true;
 
@@ -102,11 +123,6 @@ export default function BookingHistoryList() {
       setIsLoading(true);
       setError(null);
       try {
-        // Fetch ALL bookings and filter client-side for smoother UX, 
-        // or fetch by scope if list is huge. Given requirement, we fetch per scope or all.
-        // Let's fetch all via specific scope calls or just one call if API supports it.
-        // The API getUserBookings({ scope }) supports scope.
-        // We'll fetch the active scope.
         const response = await getUserBookings({ scope: activeTab });
         if (mounted) setBookings(response.data?.bookings || []);
       } catch (err) {
@@ -121,8 +137,21 @@ export default function BookingHistoryList() {
     return () => { mounted = false; };
   }, [activeTab]);
 
+  const handleOpenReview = (bookingId, item) => {
+    setSelectedBookingId(bookingId);
+    setSelectedBookingItem(item);
+    setReviewModalOpen(true);
+  };
+
   return (
     <div className="space-y-4">
+      <ReviewFormDialog 
+        isOpen={reviewModalOpen}
+        onClose={() => setReviewModalOpen(false)}
+        bookingItem={selectedBookingItem}
+        bookingId={selectedBookingId}
+      />
+
       <div className="flex space-x-1 bg-muted p-1 rounded-md w-fit">
         {TABS.map((tab) => (
           <button
@@ -151,7 +180,12 @@ export default function BookingHistoryList() {
       ) : (
         <div>
           {bookings.map(b => (
-            <BookingCard key={b.id} booking={b} />
+            <BookingCard 
+              key={b.id} 
+              booking={b} 
+              showReviewAction={activeTab === 'past'}
+              onReview={handleOpenReview}
+            />
           ))}
         </div>
       )}
