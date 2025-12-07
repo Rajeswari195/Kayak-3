@@ -18,7 +18,7 @@ export function ChatWidget() {
 
     useEffect(() => {
         if (isOpen && !ws.current) {
-            const socket = new WebSocket(`ws://localhost:8001/ws/${clientId.current}`);
+            const socket = new WebSocket(`ws://localhost:8001/ws/concierge/${clientId.current}`);
 
             socket.onopen = () => {
                 console.log('Connected to AI Service');
