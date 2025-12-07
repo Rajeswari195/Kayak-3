@@ -86,6 +86,25 @@ npm run db:init
 
 ### 4. Install Dependencies
 
+#### Download Required Data Files
+
+The `destinations.csv` file is too large for GitHub. Download it separately:
+
+```bash
+# Create data directory if it doesn't exist
+mkdir -p services/ai-service/data
+
+# Download destinations.csv (132 MB)
+# Option 1: From Google Drive/Dropbox (provide your link)
+# wget -O services/ai-service/data/destinations.csv "YOUR_DOWNLOAD_LINK_HERE"
+
+# Option 2: Or download manually from:
+# [Your Download Link Here]
+# Then move it to: services/ai-service/data/destinations.csv
+```
+
+**Note**: All other CSV files are included in the repository. Only `destinations.csv` needs to be downloaded separately.
+
 #### Core API (Node.js Backend)
 
 ```bash

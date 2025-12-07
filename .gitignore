@@ -98,3 +98,4 @@ cypress/screenshots/
 
 # Local documentation exports (images, generated PDFs, etc.)
 docs/generated/
+services/ai-service/data/destinations.csv
