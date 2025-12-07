@@ -22,7 +22,7 @@ async function test() {
 
     // 2. Register
     const email = `test${Date.now()}@example.com`;
-    const password = 'password123';
+    const password = process.env.TEST_USER_PASSWORD || 'password123';
     // Generate random SSN-like ID: XXX-XX-XXXX
     const userId = `000-${Math.floor(10 + Math.random() * 89)}-${Math.floor(1000 + Math.random() * 8999)}`;
 

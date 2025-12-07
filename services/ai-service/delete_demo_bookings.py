@@ -1,5 +1,6 @@
 import pymysql
 import sys
+import os
 
 DEMO_USER_EMAIL = "akshay.menon@usa.com"
 
@@ -7,11 +8,11 @@ def cleanup_bookings():
     print(f"--- Cleaning up bookings for {DEMO_USER_EMAIL} ---")
     
     conn = pymysql.connect(
-        host='localhost',
-        user='kayak_user',
-        password='kayak_pass',
-        database='kayak_core',
-        port=3306,
+        host=os.getenv('MYSQL_HOST', 'localhost'),
+        user=os.getenv('MYSQL_USER', 'kayak_user'),
+        password=os.getenv('MYSQL_PASSWORD', 'kayak_pass'),
+        database=os.getenv('MYSQL_DATABASE', 'kayak_core'),
+        port=int(os.getenv('MYSQL_PORT', '3306')),
         cursorclass=pymysql.cursors.DictCursor
     )
     

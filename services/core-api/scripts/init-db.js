@@ -11,7 +11,7 @@ async function run() {
     for (let i = 0; i < 30; i++) {
         try {
             connection = await mysql.createConnection({
-                uri: 'mysql://kayak_user:kayak_pass@localhost:3306/kayak_core',
+                uri: process.env.MYSQL_URL || 'mysql://kayak_user:kayak_pass@localhost:3306/kayak_core',
                 multipleStatements: true
             });
             console.log('Connected!');

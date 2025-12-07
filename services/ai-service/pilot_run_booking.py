@@ -39,12 +39,13 @@ print(f"Agent: {resp3}")
 
 # 3. Verify in DB
 try:
+    import os
     conn = pymysql.connect(
-        host='localhost',
-        user='kayak_user',
-        password='kayak_pass',
-        database='kayak_core',
-        port=3306,
+        host=os.getenv('MYSQL_HOST', 'localhost'),
+        user=os.getenv('MYSQL_USER', 'kayak_user'),
+        password=os.getenv('MYSQL_PASSWORD', 'kayak_pass'),
+        database=os.getenv('MYSQL_DATABASE', 'kayak_core'),
+        port=int(os.getenv('MYSQL_PORT', '3306')),
         cursorclass=pymysql.cursors.DictCursor
     )
     with conn.cursor() as cursor:

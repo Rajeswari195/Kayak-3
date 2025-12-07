@@ -25,17 +25,18 @@ def test_booking_date():
     
     # Verify DB (MySQL)
     import pymysql
+    import os
     
-    conn = pymysql.connect(
-        host='localhost',
-        user='kayak_user',
-        password='kayak_pass',
-        database='kayak_core',
-        port=3306,
-        cursorclass=pymysql.cursors.DictCursor
-    )
-    
+    conn = None # Initialize conn to None
     try:
+        conn = pymysql.connect(
+            host=os.getenv('MYSQL_HOST', 'localhost'),
+            user=os.getenv('MYSQL_USER', 'kayak_user'),
+            password=os.getenv('MYSQL_PASSWORD', 'kayak_pass'),
+            database=os.getenv('MYSQL_DATABASE', 'kayak_core'),
+            port=int(os.getenv('MYSQL_PORT', '3306')),
+            cursorclass=pymysql.cursors.DictCursor
+        )  
         with conn.cursor() as cursor:
             # Check Booking Table
             sql = "SELECT start_date, end_date FROM bookings WHERE id = %s"

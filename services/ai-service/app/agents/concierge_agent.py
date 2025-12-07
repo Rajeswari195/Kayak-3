@@ -235,6 +235,19 @@ class ConciergeAgent:
                 'july': 7, 'august': 8, 'september': 9, 'october': 10, 'november': 11, 'december': 12
             }
             
+            # Current context for Year Logic
+            now = datetime.now()
+            current_year = now.year
+            current_month = now.month
+
+            # Helper to guess year
+            def guess_year(m_num):
+                 # If month is earlier than current month, assume next year (e.g. Jan search in Dec)
+                 # Unless user explicitly said 2025
+                 if m_num < current_month:
+                     return current_year + 1
+                 return current_year
+
             # Regex 2: Day Month (Year) - CHECK FIRST
             # e.g. "3rd January 2026"
             match_dmy = re.search(r'(\d{1,2})(?:st|nd|rd|th)?\s+([a-z]+)\.?\s*(?P<year>\d{4})?', clean)
@@ -250,13 +263,11 @@ class ConciergeAgent:
                          break
                 
                 if month > 0:
-                    y = int(year_str) if year_str else 2025
+                    y = int(year_str) if year_str else guess_year(month)
                     return f"{y}-{month:02d}-{day:02d}"
 
             # Regex 1: Month Day (Year)
             # e.g. "January 3rd 2026", "Dec 25"
-            # Matches: "january" "3"(rd) "2026"(optional)
-            # Fix: Use \d{1,2} for day to avoid matching "January 2025" as Month+Day=2025
             match = re.search(r'([a-z]+)\.?\s+(\d{1,2})(?:st|nd|rd|th)?(?:,)?\s*(?P<year>\d{4})?', clean)
             if match:
                 month_name = match.group(1)
@@ -271,12 +282,10 @@ class ConciergeAgent:
                          break
                 
                 if month > 0:
-                    y = int(year_str) if year_str else 2025
+                    y = int(year_str) if year_str else guess_year(month)
                     return f"{y}-{month:02d}-{day:02d}"
 
-            # Fallback: Month only ("in December") -> "2025-12" for partial match
-            
-            # Fallback: Month only ("in December") -> "2025-12" for partial match
+            # Fallback: Month only ("in December") -> "YYYY-MM" for partial match
             month_only_match = re.search(r'([a-z]+)', clean)
             if month_only_match:
                  m_name = month_only_match.group(1)
@@ -286,7 +295,8 @@ class ConciergeAgent:
                          m_num = v
                          break
                  if m_num > 0:
-                      return f"2025-{m_num:02d}" # YYYY-MM for fuzzy search
+                      y = guess_year(m_num)
+                      return f"{y}-{m_num:02d}" # YYYY-MM for fuzzy search
             
             # Relative Date Logic ("in 2 weeks", "next weekend")
             from datetime import timedelta
@@ -389,7 +399,6 @@ class ConciergeAgent:
                  self.current_context["travelers"] = extracted["travelers"]
              else:
                  # Try finding digit in raw text
-                 import re
                  d_match = re.search(r'\d+', message)
                  if d_match:
                      self.current_context["travelers"] = int(d_match.group(0))
@@ -674,12 +683,16 @@ class ConciergeAgent:
                       # Book the Flight
                       flight_data = selected_item['flight'].copy()
                       flight_data['date'] = norm_date
-                      self.book_flight(flight_data, user_token or "demo-token")
+                      result = self.book_flight(flight_data, user_token or getattr(self, 'auth_token', None) or "demo-token")
+                      if result.get("status") == "error":
+                          return f"❌ Bundle Flight Booking failed: {result.get('message')}"
                       
                       # Book the Hotel
                       hotel_data = selected_item['hotel'].copy()
                       hotel_data['date'] = norm_date
-                      self.book_hotel(hotel_data, user_token or "demo-token")
+                      result_h = self.book_hotel(hotel_data, user_token or getattr(self, 'auth_token', None) or "demo-token")
+                      if result_h.get("status") == "error":
+                          return f"❌ Bundle Hotel Booking failed: {result_h.get('message')}"
                       
                       return (f"✅ **Booking Confirmed!**\n\n"
                               f"📦 **Bundle**: {details}\n"
@@ -689,17 +702,25 @@ class ConciergeAgent:
                       return f"❌ Bundle Booking failed: {str(e)}"
 
              elif selected_item.get('type') == 'Flight' or selected_item.get('airline'):
-                 try:
-                     self.book_flight(selected_item, user_token or "demo-token")
-                     return (f"✅ **Flight Confirmed!**\n\n"
-                             f"✈️ **{selected_item.get('airline')}** to {selected_item.get('destination')}\n"
-                             f"💳 **Invoice**:\n{quote_str}")
-                 except Exception as e:
-                     return f"❌ Flight Booking failed: {str(e)}"
+                  try:
+                      result = self.book_flight(selected_item, user_token or getattr(self, 'auth_token', None) or "demo-token")
+                      if result.get("status") == "error":
+                           return f"❌ Flight Booking failed: {result.get('message')}"
+                      
+                      return (f"✅ **Flight Confirmed!**\n\n"
+                              f"✈️ **{selected_item.get('airline')}** to {selected_item.get('destination')}\n"
+                              f"💳 **Invoice**:\n{quote_str}")
+                  except Exception as e:
+                      import traceback
+                      traceback.print_exc()
+                      return f"❌ Flight Booking failed: {str(e)}"
              
              elif selected_item.get('type') == 'Hotel' or selected_item.get('neighbourhood'):
                  try:
-                     self.book_hotel(selected_item, user_token or "demo-token")
+                     result = self.book_hotel(selected_item, user_token or getattr(self, 'auth_token', None) or "demo-token")
+                     if result.get("status") == "error":
+                          return f"❌ Hotel Booking failed: {result.get('message')}"
+
                      return (f"✅ **Hotel Confirmed!**\n\n"
                              f"🏨 **{selected_item.get('destination')}** (ID: {selected_item.get('id')})\n"
                              f"💳 **Invoice**:\n{quote_str}")
@@ -735,12 +756,13 @@ class ConciergeAgent:
         DEMO_USER_EMAIL = "akshay.menon@usa.com"
         
         try:
+            import os
             conn = pymysql.connect(
-                host='localhost',
-                user='kayak_user',
-                password='kayak_pass',
-                database='kayak_core',
-                port=3306,
+                host=os.getenv('MYSQL_HOST', 'localhost'),
+                user=os.getenv('MYSQL_USER', 'kayak_user'),
+                password=os.getenv('MYSQL_PASSWORD', 'kayak_pass'),
+                database=os.getenv('MYSQL_DATABASE', 'kayak_core'),
+                port=int(os.getenv('MYSQL_PORT', '3306')),
                 cursorclass=pymysql.cursors.DictCursor
             )
             with conn.cursor() as cursor:
@@ -770,13 +792,17 @@ class ConciergeAgent:
                     except Exception as e:
                         print(f"WARN: Token decode failed {e}")
 
-                # B. Fallback to Demo User
-                if not user_id:
+                # B. Fallback to Demo User (ONLY IF EXPLICIT demo-token)
+                if not user_id and auth_token == "demo-token":
                     cursor.execute("SELECT id FROM users WHERE email = %s", (DEMO_USER_EMAIL,))
                     user_rec = cursor.fetchone()
                     if user_rec:
                         user_id = user_rec['id']
                         print(f"DEBUG: Hotel Booking for Demo User ID: {user_id}")
+                
+                if not user_id:
+                     print("ERROR: Could not identify user for booking. Token Invalid.")
+                     return {"status": "error", "message": "User Identification Failed"}
 
                 if user_id:
                     booking_id = str(uuid.uuid4())
@@ -896,12 +922,13 @@ class ConciergeAgent:
         
         # 1. Sync flight to MySQL to ensure it exists
         try:
+            import os
             conn = pymysql.connect(
-                host='localhost',
-                user='kayak_user',
-                password='kayak_pass',
-                database='kayak_core',
-                port=3306,
+                host=os.getenv('MYSQL_HOST', 'localhost'),
+                user=os.getenv('MYSQL_USER', 'kayak_user'),
+                password=os.getenv('MYSQL_PASSWORD', 'kayak_pass'),
+                database=os.getenv('MYSQL_DATABASE', 'kayak_core'),
+                port=int(os.getenv('MYSQL_PORT', '3306')),
                 cursorclass=pymysql.cursors.DictCursor
             )
             
@@ -967,27 +994,36 @@ class ConciergeAgent:
                     except Exception as e:
                         print(f"WARN: Token decode failed {e}")
 
-                # B. Fallback to Demo User
-                if not user_id:
+                # B. Fallback to Demo User (ONLY IF EXPLICIT demo-token)
+                if not user_id and auth_token == "demo-token":
                     cursor.execute("SELECT id FROM users WHERE email = %s", (DEMO_USER_EMAIL,))
                     user_rec = cursor.fetchone()
                     if user_rec:
                         user_id = user_rec['id']
                         print(f"DEBUG: Flight Booking for Demo User ID: {user_id}")
+                
+                if not user_id:
+                     print("ERROR: Could not identify user for booking. Token Invalid.")
+                     return {"status": "error", "message": "User Identification Failed"}
 
                 if user_id:
                     booking_id = str(uuid.uuid4())
                     
                     # Determine Date
-                    dep_date = flight_data.get('departure_time')
-                    # Parse date if possible, else fallback to NOW()
-                    if dep_date and dep_date != "N/A":
-                        # If date string is YYYY-MM-DD
-                        date_val = f"'{dep_date}'"
-                        end_date_val = f"DATE_ADD('{dep_date}', INTERVAL 1 DAY)"
+                    # FIX: Prioritize the User's Context Date ('date') over the static DB 'departure_time'
+                    requested_date = flight_data.get('date')
+                    static_date = flight_data.get('departure_time')
+                    
+                    if requested_date:
+                         date_val = f"'{requested_date}'"
+                         end_date_val = f"DATE_ADD('{requested_date}', INTERVAL 1 DAY)"
+                    elif static_date and static_date != "N/A":
+                         date_val = f"'{static_date}'"
+                         end_date_val = f"DATE_ADD('{static_date}', INTERVAL 1 DAY)"
                     else:
-                        date_val = "NOW()"
-                        end_date_val = "DATE_ADD(NOW(), INTERVAL 1 DAY)"
+                         date_val = "NOW()"
+                         end_date_val = "DATE_ADD(NOW(), INTERVAL 1 DAY)"
+
 
                     # Insert Booking
                     sql_book = f"""

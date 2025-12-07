@@ -184,9 +184,10 @@ async def get_bundles(destination: str, origin: str = None, date: str = None, bu
 
 @app.websocket("/ws/concierge/{client_id}")
 async def websocket_endpoint(websocket: WebSocket, client_id: str):
+    print(f"🔌 WebSocket connection attempt from client: {client_id}")
     await manager.connect(websocket)
+    print(f"✅ WebSocket connected: {client_id}")
     try:
-        # Import inside the endpoint to avoid circular import issues if any
         # Import inside the endpoint to avoid circular import issues if any
         from app.agents.concierge_agent import ConciergeAgent
         agent = ConciergeAgent() # New instance per connection for session safety
@@ -197,18 +198,21 @@ async def websocket_endpoint(websocket: WebSocket, client_id: str):
 
         while True:
             data = await websocket.receive_text()
+            print(f"📨 Received message from {client_id}: {data[:100]}")
             
             # Handle Auth Token Handshake
             if data.startswith("AUTH_TOKEN:"):
                 user_token = data.split("AUTH_TOKEN:")[1]
-                print(f"DEBUG: Received auth token for client {client_id}")
+                print(f"🔑 Received auth token for client {client_id}")
                 continue # Skip processing this as a chat message
 
             # Cancel existing idle task if any
             if idle_task:
                 idle_task.cancel()
-                
+            
+            print(f"🤖 Processing message with agent...")
             response = agent.process_message(data, user_token=user_token) # Pass token to agent
+            print(f"💬 Agent response: {response[:100]}")
             
             # Check for [WAIT] tag
             if "[WAIT]" in response:

@@ -78,17 +78,17 @@ function BookingCard({ booking, showReviewAction, onReview }) {
                   {item.unitPrice} {item.currency}
                 </p>
               </div>
-              
+
               <div className="flex items-center gap-4">
                 <div className="font-medium">
                   {item.totalPrice} {item.currency}
                 </div>
-                
+
                 {/* Review Button for Past Bookings - UPDATED: Removed 'hidden group-hover:flex' */}
                 {showReviewAction && booking.status === 'CONFIRMED' && (
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    variant="outline"
+                    size="sm"
                     className="h-7 px-2 text-xs gap-1 border-primary/20 text-primary hover:bg-primary/5"
                     onClick={() => onReview(booking.id, item)}
                   >
@@ -145,7 +145,7 @@ export default function BookingHistoryList() {
 
   return (
     <div className="space-y-4">
-      <ReviewFormDialog 
+      <ReviewFormDialog
         isOpen={reviewModalOpen}
         onClose={() => setReviewModalOpen(false)}
         bookingItem={selectedBookingItem}
@@ -180,9 +180,9 @@ export default function BookingHistoryList() {
       ) : (
         <div>
           {bookings.map(b => (
-            <BookingCard 
-              key={b.id} 
-              booking={b} 
+            <BookingCard
+              key={b.id}
+              booking={b}
               showReviewAction={activeTab === 'past'}
               onReview={handleOpenReview}
             />

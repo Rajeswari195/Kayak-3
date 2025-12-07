@@ -22,7 +22,8 @@
     "kafkajs": "^2.2.4",
     "mongoose": "^8.20.1",
     "mysql2": "^3.9.0",
-    "uuid": "^13.0.0"
+    "uuid": "^13.0.0",
+    "ws": "^8.18.3"
   },
   "devDependencies": {
     "@types/node": "^24.10.1",

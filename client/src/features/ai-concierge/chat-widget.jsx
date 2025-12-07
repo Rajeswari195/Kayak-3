@@ -3,10 +3,12 @@ import { Button } from '@/ui/button';
 import { Bot, X, Send } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '../auth/use-auth';
+import { getToken } from '@/lib/auth-storage';
 
 export function ChatWidget() {
     const [isOpen, setIsOpen] = useState(false);
-    const { token } = useAuth(); // Get token from auth context
+    const { user } = useAuth(); // Track user login state
+    const token = getToken(); // Get token directly from storage
     const [messages, setMessages] = useState([
         { text: "Hi! I'm your AI Concierge. How can I help you plan your trip today?", isUser: false, actions: [] }
     ]);
@@ -18,7 +20,10 @@ export function ChatWidget() {
 
     useEffect(() => {
         if (isOpen && !ws.current) {
-            const socket = new WebSocket(`ws://localhost:8001/ws/concierge/${clientId.current}`);
+            // FIX: Use relative URL routing through Vite Proxy to handle port/CORS/IPv6 automatically
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/concierge/${clientId.current}`;
+            const socket = new WebSocket(wsUrl);
 
             socket.onopen = () => {
                 console.log('Connected to AI Service');
@@ -60,10 +65,11 @@ export function ChatWidget() {
     }, [isOpen]);
 
     useEffect(() => {
-        if (isConnected && ws.current && token) {
-            ws.current.send(`AUTH_TOKEN:${token}`);
+        const currentToken = getToken();
+        if (isConnected && ws.current && currentToken) {
+            ws.current.send(`AUTH_TOKEN:${currentToken}`);
         }
-    }, [token, isConnected]);
+    }, [user, isConnected]);
 
     useEffect(() => {
         messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

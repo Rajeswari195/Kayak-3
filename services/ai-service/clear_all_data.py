@@ -26,12 +26,13 @@ def clear_sqlite():
 def clear_mysql():
     print("🗑️ Clearing MySQL (core-api)...")
     try:
+        import os
         conn = pymysql.connect(
-            host='localhost',
-            user='kayak_user',
-            password='kayak_pass',
-            database='kayak_core',
-            port=3306
+            host=os.getenv('MYSQL_HOST', 'localhost'),
+            user=os.getenv('MYSQL_USER', 'kayak_user'),
+            password=os.getenv('MYSQL_PASSWORD', 'kayak_pass'),
+            database=os.getenv('MYSQL_DATABASE', 'kayak_core'),
+            port=int(os.getenv('MYSQL_PORT', '3306'))
         )
         with conn.cursor() as cursor:
             # Clear booking items first (FK)
