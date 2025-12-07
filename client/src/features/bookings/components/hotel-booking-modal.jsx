@@ -20,10 +20,17 @@ export default function HotelBookingModal({ isOpen, onClose, hotel, searchParams
 
   const checkIn = searchParams?.checkInDate;
   const checkOut = searchParams?.checkOutDate;
-  
+
   // Calculate nights
-  const start = new Date(checkIn);
-  const end = new Date(checkOut);
+  // Fix: split date string to avoid UTC conversion shift
+  const parseLocalYMD = (ymd) => {
+    if (!ymd) return new Date();
+    const [y, m, d] = ymd.split('-').map(Number);
+    return new Date(y, m - 1, d);
+  };
+
+  const start = parseLocalYMD(checkIn);
+  const end = parseLocalYMD(checkOut);
   const nights = Math.max(1, Math.round((end - start) / (1000 * 60 * 60 * 24)));
   const totalPrice = (hotel?.basePricePerNight || 0) * nights;
 
@@ -65,17 +72,17 @@ export default function HotelBookingModal({ isOpen, onClose, hotel, searchParams
           <div className="bg-muted/30 p-4 rounded-lg space-y-2">
             <h3 className="font-semibold text-lg">{hotel.name}</h3>
             <p className="text-sm text-muted-foreground">{hotel.city}, {hotel.state}</p>
-            
+
             <div className="flex items-center gap-4 text-sm mt-2">
               <div className="flex items-center gap-1">
                 <Calendar className="h-4 w-4" />
-                <span>{new Date(checkIn).toLocaleDateString()} — {new Date(checkOut).toLocaleDateString()}</span>
+                <span>{start.toLocaleDateString()} — {end.toLocaleDateString()}</span>
               </div>
               <div className="font-medium bg-background px-2 py-0.5 rounded border">
                 {nights} Night{nights > 1 ? 's' : ''}
               </div>
             </div>
-            
+
             <div className="border-t pt-2 mt-2 flex justify-between items-center">
               <span>Standard Room</span>
               <span className="font-bold text-lg">{hotel.currency} {totalPrice.toFixed(2)}</span>
@@ -97,7 +104,7 @@ export default function HotelBookingModal({ isOpen, onClose, hotel, searchParams
               <label className="text-sm font-medium">Card Number</label>
               <div className="relative">
                 <CreditCard className="absolute left-3 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input value={paymentDetails.cardNumber} onChange={()=>{}} readOnly className="pl-9 font-mono bg-muted/50" />
+                <Input value={paymentDetails.cardNumber} onChange={() => { }} readOnly className="pl-9 font-mono bg-muted/50" />
               </div>
             </div>
           </div>
@@ -140,9 +147,9 @@ export default function HotelBookingModal({ isOpen, onClose, hotel, searchParams
   };
 
   return (
-    <Modal 
-      isOpen={isOpen} 
-      onClose={() => { if(!isSubmitting) onClose(); }} 
+    <Modal
+      isOpen={isOpen}
+      onClose={() => { if (!isSubmitting) onClose(); }}
       title={step === 3 ? "Success" : `Book Hotel`}
     >
       {step < 3 && <BookingStepper currentStep={step} />}

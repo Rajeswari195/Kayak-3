@@ -61,19 +61,17 @@ export default function Navbar() {
 
         <nav className="flex items-center gap-4 lg:gap-6">
           {!isOnAdminPage && (
-             <>
-               <Link to="/search" className="text-sm font-medium hover:underline underline-offset-4 hidden md:block">
-                 Search
-               </Link>
-               <Link to="/ai-concierge" className="text-sm font-medium hover:underline underline-offset-4 hidden md:block">
-                 AI Concierge
-               </Link>
-                {isAuthenticated && (
-                  <Link to="/bookings" className="text-sm font-medium hover:underline underline-offset-4 hidden md:block">
-                    My Bookings
-                  </Link>
-                )}
-             </>
+            <>
+              <Link to="/search" className="text-sm font-medium hover:underline underline-offset-4 hidden md:block">
+                Search
+              </Link>
+
+              {isAuthenticated && (
+                <Link to="/bookings" className="text-sm font-medium hover:underline underline-offset-4 hidden md:block">
+                  My Bookings
+                </Link>
+              )}
+            </>
           )}
 
           <div className="flex items-center gap-2">
@@ -82,7 +80,7 @@ export default function Navbar() {
                 <Link to="/admin">Admin Dashboard</Link>
               </Button>
             )}
-             {isAdmin && isOnAdminPage && (
+            {isAdmin && isOnAdminPage && (
               <Button variant="ghost" size="sm" asChild>
                 <Link to="/">Exit Admin</Link>
               </Button>
@@ -92,8 +90,8 @@ export default function Navbar() {
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   {/* UPDATED PROFILE BUTTON: Uses Initials + Background Color */}
-                  <Button 
-                    variant="ghost" 
+                  <Button
+                    variant="ghost"
                     className="relative h-9 w-9 rounded-full bg-primary/10 hover:bg-primary/20 border border-primary/20 flex items-center justify-center overflow-hidden"
                   >
                     <span className="text-xs font-bold text-primary">
@@ -118,10 +116,10 @@ export default function Navbar() {
                     </Link>
                   </DropdownMenuItem>
                   <DropdownMenuItem asChild>
-                     <Link to="/bookings">
-                       <Settings className="mr-2 h-4 w-4" />
-                       <span>My Bookings</span>
-                     </Link>
+                    <Link to="/bookings">
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>My Bookings</span>
+                    </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
                     <>
@@ -143,7 +141,7 @@ export default function Navbar() {
                 <Button variant="ghost" size="sm" asChild>
                   <Link to="/auth/login">Log in</Link>
                 </Button>
-                 <Button size="sm" asChild>
+                <Button size="sm" asChild>
                   <Link to="/auth/register">Register</Link>
                 </Button>
               </div>

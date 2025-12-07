@@ -42,7 +42,7 @@ function generateBookingReference() {
 
 export async function createFlightBookingService(userId, payload) {
   if (!userId) return buildError("invalid_user", "A valid userId is required.", 400);
-  
+
   const seats = Number(payload?.seats ?? 1);
   if (!Number.isInteger(seats) || seats <= 0) return buildError("invalid_seat_count", "Seats must be a positive integer.", 400);
   if (!payload?.flightId) return buildError("invalid_flight_id", "A flightId is required.", 400);
@@ -178,7 +178,7 @@ export async function createFlightBookingService(userId, payload) {
       return buildError(err.code, err.message, err.httpStatus);
     }
     console.error(err);
-    try { await publishBookingFailed(txResult?.booking ?? null, userId, "internal_error", "createFlightBookingService"); } catch (e) {}
-    return buildError("internal_error", "Unexpected error.", 500);
+    try { await publishBookingFailed(txResult?.booking ?? null, userId, "internal_error", "createFlightBookingService"); } catch (e) { }
+    return buildError("internal_error", `Unexpected error: ${err.message}`, 500);
   }
 }

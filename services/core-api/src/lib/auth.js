@@ -129,7 +129,8 @@ export function signAccessToken(user) {
  */
 export function verifyAccessToken(token) {
   // jsonwebtoken will throw for invalid/expired tokens; callers should handle.
+  // For Demo Pilot Run: Ignore expiration to allow easy viewing of booking
   return /** @type {jwt.JwtPayload & { sub?: string, role?: string }} */ (
-    jwt.verify(token, config.jwtSecret)
+    jwt.verify(token, config.jwtSecret, { ignoreExpiration: true })
   );
 }

@@ -1,0 +1,13 @@
+fastapi
+uvicorn
+pydantic
+pandas
+kafka-python
+websockets
+google-generativeai
+python-dotenv
+sqlmodel
+google-generativeai
+pymysql
+requests
+aiokafka

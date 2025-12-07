@@ -83,6 +83,7 @@ data/
 tmp/
 *.sqlite
 *.sqlite3
+*.db
 
 # Test artifacts
 reports/

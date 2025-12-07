@@ -119,7 +119,7 @@ export async function runInBookingTransaction(operationName, fn) {
 
         throw createBookingTransactionError(
             "db_transaction_failed",
-            `Booking transaction "${operationName}" failed unexpectedly.`,
+            `Booking transaction "${operationName}" failed unexpectedly: ${error.message}`,
       /** @type {Error} */(error)
         );
     }
