@@ -88,22 +88,19 @@ npm run db:init
 
 #### Download Required Data Files
 
-The `destinations.csv` file is too large for GitHub. Download it separately:
+The `destinations.csv` file is too large for GitHub. Download it from Kaggle:
+
+**Download destinations.csv:**
+1. Visit: https://www.kaggle.com/competitions/expedia-hotel-recommendations/data
+2. Download the `destinations.csv` file
+3. Move it to: `services/ai-service/data/destinations.csv`
 
 ```bash
-# Create data directory if it doesn't exist
-mkdir -p services/ai-service/data
-
-# Download destinations.csv (132 MB)
-# Option 1: From Google Drive/Dropbox (provide your link)
-# wget -O services/ai-service/data/destinations.csv "YOUR_DOWNLOAD_LINK_HERE"
-
-# Option 2: Or download manually from:
-# [Your Download Link Here]
-# Then move it to: services/ai-service/data/destinations.csv
+# After downloading, place the file in the correct location:
+mv ~/Downloads/destinations.csv services/ai-service/data/
 ```
 
-**Note**: All other CSV files are included in the repository. Only `destinations.csv` needs to be downloaded separately.
+**Note**: All other CSV files are included in the repository. Only `destinations.csv` needs to be downloaded separately from Kaggle.
 
 #### Core API (Node.js Backend)
 
