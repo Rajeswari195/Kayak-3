@@ -134,10 +134,12 @@ class DealsAgent:
                 tags = []
                 
                 # Rule 1: Price Drop
-                if price <= 0.85 * avg:
+                if avg > 0 and price <= 0.85 * avg:
                     is_deal = True
                     discount = int((1 - price/avg) * 100)
                     tags.append(f"{discount}% OFF")
+                elif avg <= 0:
+                     pass # invalid data
                     
                 # Rule 2: Scarcity
                 if data.get('seats_left', 10) < 5 or data.get('availability', 10) < 3:

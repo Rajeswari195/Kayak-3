@@ -7,7 +7,7 @@ import sys
 # Token for akshay.menon
 TOKEN = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxYmIwMWFhNy1iNmE0LTQ0ZDAtOGQ1NC1lNmRhZDBjZDg4ZDAiLCJlbWFpbCI6ImFrc2hheS5tZW5vbkB1c2EuY29tIiwicm9sZSI6InVzZXIiLCJpYXQiOjE3NjUwOTk2NTMsImV4cCI6MTc2NTEwMzI1M30.zUiv01JLpPW_vrQNPlnpT1mROhAULcOmmxCZVN8rpD4"
 
-URI = "ws://localhost:8001/ws/123"
+URI = "ws://localhost:8001/ws/concierge/akshay.menon@usa.com"
 
 async def test_ai_pilot():
     try:

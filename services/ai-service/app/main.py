@@ -182,8 +182,8 @@ async def get_bundles(destination: str, origin: str = None, date: str = None, bu
     amt_list = amenities.split(",") if amenities else None
     return deals_agent.create_bundles(destination, origin, date, budget, amt_list)
 
-@app.websocket("/ws/{client_id}")
-async def websocket_endpoint(websocket: WebSocket, client_id: int):
+@app.websocket("/ws/concierge/{client_id}")
+async def websocket_endpoint(websocket: WebSocket, client_id: str):
     await manager.connect(websocket)
     try:
         # Import inside the endpoint to avoid circular import issues if any
